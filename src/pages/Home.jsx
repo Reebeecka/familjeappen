@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import NotificationButton from '../components/NotificationButton'
 
 export default function Home() {
   const { profile, householdId } = useAuth()
@@ -46,6 +47,8 @@ export default function Home() {
           <p className="invite-code">{household.invite_code}</p>
         </div>
       )}
+
+      <NotificationButton />
 
       <div className="dashboard-grid">
         <Link to="/uppgifter" className="card dash-card">

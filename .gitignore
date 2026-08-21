@@ -18,6 +18,7 @@ dist-ssr
 !.env.example
 .env.local
 PLANERING.md
+NOTISER.md
 
 # Editor directories and files
 .vscode/*

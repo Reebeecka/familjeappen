@@ -311,6 +311,25 @@ input:focus {
   margin-top: 0.3rem;
 }
 
+/* Notifications */
+.notif-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.notif-card.enabled {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.notif-title {
+  font-weight: 600;
+  margin: 0 0 0.2rem;
+}
+
 /* Lists */
 .add-row {
   display: flex;

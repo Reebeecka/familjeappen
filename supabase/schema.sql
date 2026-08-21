@@ -25,6 +25,7 @@ create table if not exists tasks (
   title text not null,
   done boolean not null default false,
   created_by uuid references auth.users (id) on delete set null,
+  updated_by uuid references auth.users (id) on delete set null,
   created_at timestamptz not null default now()
 );
 
@@ -34,11 +35,22 @@ create table if not exists shopping_items (
   name text not null,
   checked boolean not null default false,
   created_by uuid references auth.users (id) on delete set null,
+  updated_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists push_subscriptions (
+  endpoint text primary key,
+  p256dh text not null,
+  auth text not null,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  household_id uuid not null references households (id) on delete cascade,
   created_at timestamptz not null default now()
 );
 
 create index if not exists ix_tasks_household on tasks (household_id);
 create index if not exists ix_shopping_household on shopping_items (household_id);
+create index if not exists ix_push_household on push_subscriptions (household_id);
 
 -- ---------- Skapa profil automatiskt vid nytt konto ----------
 
@@ -120,6 +132,7 @@ alter table households enable row level security;
 alter table profiles enable row level security;
 alter table tasks enable row level security;
 alter table shopping_items enable row level security;
+alter table push_subscriptions enable row level security;
 
 -- households: se ditt eget hushåll
 drop policy if exists "household members can read" on households;
@@ -148,6 +161,13 @@ create policy "shopping in my household" on shopping_items
   for all
   using (household_id = public.current_household_id())
   with check (household_id = public.current_household_id());
+
+-- push_subscriptions: var och en hanterar bara sina egna
+drop policy if exists "manage own subscriptions" on push_subscriptions;
+create policy "manage own subscriptions" on push_subscriptions
+  for all
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
 
 -- ---------- Realtid (så ändringar syns direkt) ----------
 

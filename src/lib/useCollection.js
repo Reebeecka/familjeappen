@@ -65,9 +65,12 @@ export function useCollection(table, orderBy = 'created_at') {
 
   const add = useCallback(
     async (fields) => {
-      const { error: insertError } = await supabase
-        .from(table)
-        .insert({ ...fields, household_id: householdId, created_by: user?.id })
+      const { error: insertError } = await supabase.from(table).insert({
+        ...fields,
+        household_id: householdId,
+        created_by: user?.id,
+        updated_by: user?.id,
+      })
       if (insertError) setError(insertError.message)
     },
     [table, householdId, user],
@@ -75,10 +78,13 @@ export function useCollection(table, orderBy = 'created_at') {
 
   const update = useCallback(
     async (id, fields) => {
-      const { error: updateError } = await supabase.from(table).update(fields).eq('id', id)
+      const { error: updateError } = await supabase
+        .from(table)
+        .update({ ...fields, updated_by: user?.id })
+        .eq('id', id)
       if (updateError) setError(updateError.message)
     },
-    [table],
+    [table, user],
   )
 
   const remove = useCallback(

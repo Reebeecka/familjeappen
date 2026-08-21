@@ -1,0 +1,44 @@
+import { precacheAndRoute } from 'workbox-precaching'
+
+// Precache appens filer (fylls i av vite-plugin-pwa vid bygget).
+precacheAndRoute(self.__WB_MANIFEST)
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim())
+})
+
+// Ta emot push-meddelanden och visa notis.
+self.addEventListener('push', (event) => {
+  let payload = { title: 'Familjeappen', body: 'Ny uppdatering' }
+  try {
+    if (event.data) payload = { ...payload, ...event.data.json() }
+  } catch {
+    if (event.data) payload.body = event.data.text()
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: '/favicon.svg',
+      badge: '/favicon.svg',
+      data: { url: payload.url ?? '/' },
+      tag: payload.tag,
+    }),
+  )
+})
+
+// Öppna appen när användaren klickar på notisen.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const targetUrl = event.notification.data?.url ?? '/'
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client) return client.focus()
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl)
+      return undefined
+    }),
+  )
+})
