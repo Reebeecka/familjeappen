@@ -47,6 +47,7 @@ function formFromRecipe(recipe) {
 function RecipeForm({ initialForm, isEditing, onCancel, onSave }) {
   const [form, setForm] = useState(initialForm)
   const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   const setField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -57,7 +58,8 @@ function RecipeForm({ initialForm, isEditing, onCancel, onSave }) {
     if (!form.title.trim()) return
 
     setIsSaving(true)
-    await onSave({
+    setSaveError('')
+    const wasSaved = await onSave({
       title: form.title.trim(),
       source_url: form.sourceUrl.trim() || null,
       image_url: form.imageUrl.trim() || null,
@@ -65,6 +67,7 @@ function RecipeForm({ initialForm, isEditing, onCancel, onSave }) {
       ingredients: linesFrom(form.ingredients),
       steps: linesFrom(form.steps),
     })
+    if (!wasSaved) setSaveError('Receptet kunde inte sparas. Försök igen.')
     setIsSaving(false)
   }
 
@@ -142,6 +145,7 @@ function RecipeForm({ initialForm, isEditing, onCancel, onSave }) {
           {isSaving ? 'Sparar…' : 'Spara recept'}
         </button>
       </div>
+      {saveError && <p className="error">{saveError}</p>}
     </form>
   )
 }
@@ -165,16 +169,45 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
   }
 
   const addIngredients = () => {
-    const rows = (recipe.ingredients ?? []).map((ingredient) => ({
-      name: ingredient,
-      checked: false,
-      household_id: householdId,
-      created_by: user?.id,
-      updated_by: user?.id,
-    }))
-    if (rows.length === 0) return
+    const ingredients = recipe.ingredients ?? []
+    if (ingredients.length === 0) return
+
     runAction(
-      () => supabase.from('shopping_items').insert(rows),
+      async () => {
+        const { data: shoppingLists, error: listError } = await supabase
+          .from('lists')
+          .select('id')
+          .eq('type', 'shopping')
+          .eq('household_id', householdId)
+          .limit(1)
+        if (listError) return { error: listError }
+
+        let listId = shoppingLists?.[0]?.id
+        if (!listId) {
+          const { data: shoppingList, error: createError } = await supabase
+            .from('lists')
+            .insert({
+              name: 'Inköp',
+              type: 'shopping',
+              icon: '🛒',
+              household_id: householdId,
+            })
+            .select('id')
+            .single()
+          if (createError) return { error: createError }
+          listId = shoppingList.id
+        }
+
+        const rows = ingredients.map((ingredient) => ({
+          list_id: listId,
+          title: ingredient,
+          done: false,
+          household_id: householdId,
+          created_by: user.id,
+          updated_by: user.id,
+        }))
+        return supabase.from('list_items').insert(rows)
+      },
       'Ingredienserna lades på inköpslistan.',
     )
   }
@@ -338,11 +371,15 @@ export default function Recipes() {
   }
 
   const handleSave = async (fields) => {
-    if (editingRecipe) await update(editingRecipe.id, fields)
-    else await add(fields)
+    const wasSaved = editingRecipe
+      ? await update(editingRecipe.id, fields)
+      : await add(fields)
+    if (!wasSaved) return false
+
     setDraftForm(null)
     setEditingRecipe(null)
     setSelectedRecipe(null)
+    return true
   }
 
   const handleDelete = async () => {

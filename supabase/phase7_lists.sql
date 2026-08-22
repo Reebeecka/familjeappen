@@ -5,6 +5,10 @@
 
 -- ---------- Tabeller ----------
 
+alter table public.tasks
+  add column if not exists assigned_to uuid
+  references auth.users (id) on delete set null;
+
 create table if not exists public.lists (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null references public.households (id) on delete cascade,
@@ -146,6 +150,13 @@ create trigger log_list_item_created
   after insert on public.list_items
   for each row
   execute function public.log_activity('la till', 'listpunkt', 'title');
+
+drop trigger if exists log_list_item_completed on public.list_items;
+create trigger log_list_item_completed
+  after update on public.list_items
+  for each row
+  when (old.done is distinct from new.done and new.done = true)
+  execute function public.log_activity('slutförde', 'uppgift', 'title');
 
 -- ---------- Realtid ----------
 

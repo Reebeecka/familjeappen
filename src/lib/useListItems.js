@@ -124,18 +124,23 @@ export function useListItems(listId) {
   const add = useCallback(
     async (fields) => {
       setOperationError(null)
-      const { error: insertError } = await supabase.from('list_items').insert({
-        ...fields,
-        household_id: householdId,
-        list_id: listId,
-        created_by: user?.id,
-        updated_by: user?.id,
-      })
-      if (insertError) {
+      try {
+        const { error: insertError } = await supabase.from('list_items').insert({
+          ...fields,
+          household_id: householdId,
+          list_id: listId,
+          created_by: user?.id,
+          updated_by: user?.id,
+        })
+        if (insertError) {
+          setOperationError(insertError.message)
+          return false
+        }
+        return true
+      } catch (insertError) {
         setOperationError(insertError.message)
         return false
       }
-      return true
     },
     [householdId, listId, setOperationError, user],
   )
@@ -143,16 +148,21 @@ export function useListItems(listId) {
   const update = useCallback(
     async (id, fields) => {
       setOperationError(null)
-      const { error: updateError } = await supabase
-        .from('list_items')
-        .update({ ...fields, updated_by: user?.id })
-        .eq('id', id)
-        .eq('list_id', listId)
-      if (updateError) {
+      try {
+        const { error: updateError } = await supabase
+          .from('list_items')
+          .update({ ...fields, updated_by: user?.id })
+          .eq('id', id)
+          .eq('list_id', listId)
+        if (updateError) {
+          setOperationError(updateError.message)
+          return false
+        }
+        return true
+      } catch (updateError) {
         setOperationError(updateError.message)
         return false
       }
-      return true
     },
     [listId, setOperationError, user],
   )
@@ -160,18 +170,30 @@ export function useListItems(listId) {
   const remove = useCallback(
     async (id) => {
       setOperationError(null)
-      const { error: deleteError } = await supabase
-        .from('list_items')
-        .delete()
-        .eq('id', id)
-        .eq('list_id', listId)
-      if (deleteError) {
+      try {
+        const { error: deleteError } = await supabase
+          .from('list_items')
+          .delete()
+          .eq('id', id)
+          .eq('list_id', listId)
+        if (deleteError) {
+          setOperationError(deleteError.message)
+          return false
+        }
+        setResult((current) => {
+          if (current.scopeKey !== scopeKey) return current
+          return {
+            ...current,
+            items: current.items.filter((item) => item.id !== id),
+          }
+        })
+        return true
+      } catch (deleteError) {
         setOperationError(deleteError.message)
         return false
       }
-      return true
     },
-    [listId, setOperationError],
+    [listId, scopeKey, setOperationError],
   )
 
   const hasLoadedScope = result.scopeKey === scopeKey

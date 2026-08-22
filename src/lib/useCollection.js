@@ -66,32 +66,60 @@ export function useCollection(table, orderBy = 'created_at') {
 
   const add = useCallback(
     async (fields) => {
-      const { error: insertError } = await supabase.from(table).insert({
-        ...fields,
-        household_id: householdId,
-        created_by: user?.id,
-        updated_by: user?.id,
-      })
-      if (insertError) setError(insertError.message)
+      try {
+        const { error: insertError } = await supabase.from(table).insert({
+          ...fields,
+          household_id: householdId,
+          created_by: user?.id,
+          updated_by: user?.id,
+        })
+        if (insertError) {
+          setError(insertError.message)
+          return false
+        }
+        return true
+      } catch (insertError) {
+        setError(insertError.message)
+        return false
+      }
     },
     [table, householdId, user],
   )
 
   const update = useCallback(
     async (id, fields) => {
-      const { error: updateError } = await supabase
-        .from(table)
-        .update({ ...fields, updated_by: user?.id })
-        .eq('id', id)
-      if (updateError) setError(updateError.message)
+      try {
+        const { error: updateError } = await supabase
+          .from(table)
+          .update({ ...fields, updated_by: user?.id })
+          .eq('id', id)
+        if (updateError) {
+          setError(updateError.message)
+          return false
+        }
+        return true
+      } catch (updateError) {
+        setError(updateError.message)
+        return false
+      }
     },
     [table, user],
   )
 
   const remove = useCallback(
     async (id) => {
-      const { error: deleteError } = await supabase.from(table).delete().eq('id', id)
-      if (deleteError) setError(deleteError.message)
+      try {
+        const { error: deleteError } = await supabase.from(table).delete().eq('id', id)
+        if (deleteError) {
+          setError(deleteError.message)
+          return false
+        }
+        setItems((current) => current.filter((row) => row.id !== id))
+        return true
+      } catch (deleteError) {
+        setError(deleteError.message)
+        return false
+      }
     },
     [table],
   )

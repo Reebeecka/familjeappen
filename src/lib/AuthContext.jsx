@@ -6,6 +6,7 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [profileError, setProfileError] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -14,38 +15,97 @@ export function AuthProvider({ children }) {
       return
     }
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setLoading(false)
-    })
+    let active = true
+    let authEventReceived = false
+    let profileRequestId = 0
+    let currentSessionKey
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const resolveSession = async (newSession) => {
+      const sessionKey = newSession?.access_token ?? null
+
       setSession(newSession)
-    })
 
-    return () => listener.subscription.unsubscribe()
-  }, [])
+      if (sessionKey === currentSessionKey) {
+        return
+      }
 
-  useEffect(() => {
-    if (!supabase || !session?.user) {
+      currentSessionKey = sessionKey
+      const requestId = ++profileRequestId
       setProfile(null)
-      return
+      setProfileError(null)
+
+      if (!newSession?.user) {
+        setLoading(false)
+        return
+      }
+
+      setLoading(true)
+
+      let data = null
+      let profileFetchError = null
+
+      try {
+        const result = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', newSession.user.id)
+          .single()
+        data = result.data
+        profileFetchError = result.error
+      } catch (error) {
+        profileFetchError = error
+      }
+
+      if (!active || requestId !== profileRequestId) {
+        return
+      }
+
+      if (profileFetchError) {
+        console.error('Kunde inte hämta användarprofil:', profileFetchError)
+        setProfile(null)
+        setProfileError(profileFetchError)
+      } else {
+        setProfile(data)
+      }
+
+      setLoading(false)
     }
 
-    let active = true
-    supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single()
-      .then(({ data }) => {
-        if (active) setProfile(data)
-      })
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      authEventReceived = true
+      void resolveSession(newSession)
+    })
+
+    const initializeSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession()
+        if (!active || authEventReceived) {
+          return
+        }
+
+        if (error) {
+          console.error('Kunde inte hämta session:', error)
+          setLoading(false)
+          return
+        }
+
+        await resolveSession(data.session)
+      } catch (error) {
+        if (active && !authEventReceived) {
+          console.error('Kunde inte hämta session:', error)
+          setLoading(false)
+        }
+      }
+    }
+
+    void initializeSession()
 
     return () => {
       active = false
+      profileRequestId += 1
+      listener.subscription.unsubscribe()
     }
-  }, [session])
+  }, [])
 
   const signOut = async () => {
     if (supabase) await supabase.auth.signOut()
@@ -55,6 +115,7 @@ export function AuthProvider({ children }) {
     session,
     user: session?.user ?? null,
     profile,
+    profileError,
     householdId: profile?.household_id ?? null,
     loading,
     signOut,

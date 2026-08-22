@@ -24,11 +24,30 @@ alter table public.activity_reactions enable row level security;
 
 drop policy if exists "activity_reactions in my household"
   on public.activity_reactions;
-create policy "activity_reactions in my household"
+drop policy if exists "read activity_reactions in my household"
+  on public.activity_reactions;
+drop policy if exists "create own activity_reactions"
+  on public.activity_reactions;
+drop policy if exists "delete own activity_reactions"
+  on public.activity_reactions;
+
+create policy "read activity_reactions in my household"
   on public.activity_reactions
-  for all
-  using (household_id = public.current_household_id())
-  with check (household_id = public.current_household_id());
+  for select
+  using (household_id = public.current_household_id());
+
+create policy "create own activity_reactions"
+  on public.activity_reactions
+  for insert
+  with check (
+    household_id = public.current_household_id()
+    and user_id = auth.uid()
+  );
+
+create policy "delete own activity_reactions"
+  on public.activity_reactions
+  for delete
+  using (user_id = auth.uid());
 
 -- ---------- Realtid ----------
 

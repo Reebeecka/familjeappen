@@ -215,12 +215,13 @@ export default function Calendar() {
     event.preventDefault()
     const trimmed = title.trim()
     if (!trimmed || !date) return
-    const startAt = allDay || !time ? `${date}T00:00:00` : `${date}T${time}:00`
+    const isAllDay = allDay || !time
+    const startAt = isAllDay ? `${date}T00:00:00` : `${date}T${time}:00`
     await add({
       title: trimmed,
       description: description.trim() || null,
       start_at: new Date(startAt).toISOString(),
-      all_day: allDay,
+      all_day: isAllDay,
       category,
       color,
     })

@@ -174,7 +174,15 @@ export default function Documents() {
         household_id: householdId,
         created_by: user?.id,
       })
-      if (insertError) throw insertError
+      if (insertError) {
+        const { error: cleanupError } = await supabase.storage.from(BUCKET).remove([path])
+        if (cleanupError) {
+          throw new Error(
+            `${insertError.message} Den uppladdade filen kunde inte tas bort: ${cleanupError.message}`,
+          )
+        }
+        throw insertError
+      }
     } catch (err) {
       setError(err.message ?? 'Uppladdningen misslyckades.')
     } finally {
