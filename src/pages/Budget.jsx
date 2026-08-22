@@ -189,7 +189,7 @@ export default function Budget() {
     event.preventDefault()
     const value = parseFloat(String(amount).replace(',', '.'))
     if (!Number.isFinite(value) || value <= 0) return
-    await add({
+    const wasAdded = await add({
       kind,
       category: category.trim() || null,
       amount: value,
@@ -197,6 +197,8 @@ export default function Budget() {
       entry_date: entryDate || today(),
       currency,
     })
+    if (!wasAdded) return
+
     setCategory('')
     setAmount('')
     setNote('')

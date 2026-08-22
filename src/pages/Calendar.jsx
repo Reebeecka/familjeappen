@@ -217,7 +217,7 @@ export default function Calendar() {
     if (!trimmed || !date) return
     const isAllDay = allDay || !time
     const startAt = isAllDay ? `${date}T00:00:00` : `${date}T${time}:00`
-    await add({
+    const wasAdded = await add({
       title: trimmed,
       description: description.trim() || null,
       start_at: new Date(startAt).toISOString(),
@@ -225,6 +225,8 @@ export default function Calendar() {
       category,
       color,
     })
+    if (!wasAdded) return
+
     setTitle('')
     setTime('')
     setAllDay(false)

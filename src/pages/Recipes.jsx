@@ -176,13 +176,16 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
       async () => {
         const { data: shoppingLists, error: listError } = await supabase
           .from('lists')
-          .select('id')
+          .select('id, name, created_at')
           .eq('type', 'shopping')
           .eq('household_id', householdId)
-          .limit(1)
+          .order('created_at', { ascending: true })
+          .order('id', { ascending: true })
         if (listError) return { error: listError }
 
-        let listId = shoppingLists?.[0]?.id
+        const preferredList =
+          shoppingLists?.find((list) => list.name === 'Inköp') ?? shoppingLists?.[0]
+        let listId = preferredList?.id
         if (!listId) {
           const { data: shoppingList, error: createError } = await supabase
             .from('lists')

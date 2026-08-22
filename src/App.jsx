@@ -22,7 +22,7 @@ import Settings from './pages/Settings'
 import Layout from './components/Layout'
 
 export default function App() {
-  const { session, loading } = useAuth()
+  const { session, loading, profileError } = useAuth()
 
   if (!isSupabaseConfigured) {
     return <SetupNeeded />
@@ -38,6 +38,22 @@ export default function App() {
 
   if (!session) {
     return <Login />
+  }
+
+  if (profileError) {
+    return (
+      <div className="center-screen">
+        <div className="card error-card">
+          <h1 className="page-title">Kunde inte ladda din profil</h1>
+          <p className="muted">
+            Något gick fel när din profil hämtades. Kontrollera anslutningen och försök igen.
+          </p>
+          <button className="btn primary" onClick={() => window.location.reload()}>
+            Försök igen
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
