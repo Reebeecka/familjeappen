@@ -46,6 +46,12 @@ export default function MealPlanner() {
     await add({ meal_date: dateKey, meal_type: mealType, title: trimmed })
   }
 
+  const handleRemove = (meal) => {
+    if (!window.confirm(`Vill du ta bort måltiden "${meal.title}"? Detta går inte att ångra.`))
+      return
+    remove(meal.id)
+  }
+
   return (
     <div className="page">
       <h1 className="page-title">Måltider 🍽️</h1>
@@ -71,8 +77,8 @@ export default function MealPlanner() {
                       <button
                         type="button"
                         className="btn icon"
-                        onClick={() => remove(meal.id)}
-                        aria-label="Ta bort"
+                        onClick={() => handleRemove(meal)}
+                        aria-label={`Ta bort måltiden ${meal.title}`}
                       >
                         🗑️
                       </button>
@@ -91,8 +97,13 @@ export default function MealPlanner() {
                     value={drafts[fieldKey] ?? ''}
                     onChange={(e) => setDraft(fieldKey, e.target.value)}
                     placeholder={`Lägg till ${type.label.toLowerCase()}…`}
+                    aria-label={`Lägg till ${type.label.toLowerCase()} för ${day.heading}`}
                   />
-                  <button type="submit" className="btn primary">
+                  <button
+                    type="submit"
+                    className="btn primary"
+                    aria-label={`Lägg till ${type.label.toLowerCase()} för ${day.heading}`}
+                  >
                     +
                   </button>
                 </form>

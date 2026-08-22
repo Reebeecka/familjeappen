@@ -231,6 +231,13 @@ export default function Budget() {
     else await addGoal({ month: selectedMonth, amount: value })
   }
 
+  const handleRemoveEntry = (entry) => {
+    const entryName = entry.category || (entry.kind === 'inkomst' ? 'inkomst' : 'utgift')
+    if (!window.confirm(`Vill du ta bort budgetposten "${entryName}"? Detta går inte att ångra.`))
+      return
+    remove(entry.id)
+  }
+
   return (
     <div className="page">
       <h1 className="page-title">Budget 💰</h1>
@@ -477,8 +484,10 @@ export default function Budget() {
                 <button
                   type="button"
                   className="btn icon"
-                  onClick={() => remove(entry.id)}
-                  aria-label="Ta bort"
+                  onClick={() => handleRemoveEntry(entry)}
+                  aria-label={`Ta bort budgetposten ${
+                    entry.category || (entry.kind === 'inkomst' ? 'inkomst' : 'utgift')
+                  }`}
                 >
                   🗑️
                 </button>

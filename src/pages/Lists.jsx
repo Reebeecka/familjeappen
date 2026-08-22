@@ -108,7 +108,15 @@ export default function Lists() {
               <button
                 type="button"
                 className="btn icon lists-delete"
-                onClick={() => remove(list.id)}
+                onClick={() => {
+                  if (
+                    !window.confirm(
+                      `Vill du ta bort listan "${list.name}"? Detta går inte att ångra.`,
+                    )
+                  )
+                    return
+                  remove(list.id)
+                }}
                 aria-label={`Ta bort listan ${list.name}`}
               >
                 🗑️

@@ -185,8 +185,17 @@ function ListItem({
         <button
           type="button"
           className="btn icon list-detail-remove"
-          onClick={() => remove(item.id)}
-          aria-label={`Ta bort ${item.title}`}
+          onClick={() => {
+            const itemType = isSubtask ? 'deluppgiften' : isShopping ? 'varan' : 'uppgiften'
+            if (
+              !window.confirm(
+                `Vill du ta bort ${itemType} "${item.title}"? Detta går inte att ångra.`,
+              )
+            )
+              return
+            remove(item.id)
+          }}
+          aria-label={`Ta bort ${isSubtask ? 'deluppgiften' : isShopping ? 'varan' : 'uppgiften'} ${item.title}`}
         >
           🗑️
         </button>

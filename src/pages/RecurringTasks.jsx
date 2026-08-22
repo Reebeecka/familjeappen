@@ -50,6 +50,16 @@ export default function RecurringTasks() {
     setDayOfMonth(1)
   }
 
+  const handleRemove = (task) => {
+    if (
+      !window.confirm(
+        `Vill du ta bort den återkommande uppgiften "${task.title}"? Detta går inte att ångra.`,
+      )
+    )
+      return
+    remove(task.id)
+  }
+
   return (
     <div className="page">
       <h1 className="page-title">Återkommande 🔁</h1>
@@ -125,8 +135,8 @@ export default function RecurringTasks() {
               <button
                 type="button"
                 className="btn icon"
-                onClick={() => remove(task.id)}
-                aria-label="Ta bort"
+                onClick={() => handleRemove(task)}
+                aria-label={`Ta bort den återkommande uppgiften ${task.title}`}
               >
                 🗑️
               </button>

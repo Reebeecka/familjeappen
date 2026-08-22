@@ -89,6 +89,16 @@ function formatTime(event) {
 }
 
 function EventItems({ events, remove }) {
+  const handleRemove = (event) => {
+    if (
+      !window.confirm(
+        `Vill du ta bort kalenderhändelsen "${event.title}"? Detta går inte att ångra.`,
+      )
+    )
+      return
+    remove(event.id)
+  }
+
   return (
     <ul className="list">
       {events.map((event) => (
@@ -109,8 +119,8 @@ function EventItems({ events, remove }) {
           <button
             type="button"
             className="btn icon"
-            onClick={() => remove(event.id)}
-            aria-label={`Ta bort ${event.title}`}
+            onClick={() => handleRemove(event)}
+            aria-label={`Ta bort kalenderhändelsen ${event.title}`}
           >
             🗑️
           </button>

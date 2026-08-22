@@ -250,7 +250,12 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
             <button type="button" className="btn ghost" onClick={onEdit}>
               Redigera
             </button>
-            <button type="button" className="btn icon" onClick={onDelete} aria-label="Ta bort">
+            <button
+              type="button"
+              className="btn icon"
+              onClick={onDelete}
+              aria-label={`Ta bort receptet ${recipe.title}`}
+            >
               🗑️
             </button>
           </div>
@@ -386,7 +391,13 @@ export default function Recipes() {
   }
 
   const handleDelete = async () => {
-    if (!selectedRecipe || !window.confirm(`Ta bort "${selectedRecipe.title}"?`)) return
+    if (
+      !selectedRecipe ||
+      !window.confirm(
+        `Vill du ta bort receptet "${selectedRecipe.title}"? Detta går inte att ångra.`,
+      )
+    )
+      return
     await remove(selectedRecipe.id)
     setSelectedRecipe(null)
   }

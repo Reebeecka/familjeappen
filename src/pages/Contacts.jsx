@@ -76,6 +76,7 @@ export default function Contacts() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Sök på namn…"
+        aria-label="Sök kontakter efter namn"
       />
 
       <form onSubmit={handleAdd} className="form card">
@@ -236,15 +237,23 @@ export default function Contacts() {
                     type="button"
                     className="btn icon"
                     onClick={() => startEdit(contact)}
-                    aria-label="Redigera"
+                    aria-label={`Redigera kontakten ${contact.name}`}
                   >
                     ✏️
                   </button>
                   <button
                     type="button"
                     className="btn icon"
-                    onClick={() => remove(contact.id)}
-                    aria-label="Ta bort"
+                    onClick={() => {
+                      if (
+                        !window.confirm(
+                          `Vill du ta bort kontakten "${contact.name}"? Detta går inte att ångra.`,
+                        )
+                      )
+                        return
+                      remove(contact.id)
+                    }}
+                    aria-label={`Ta bort kontakten ${contact.name}`}
                   >
                     🗑️
                   </button>

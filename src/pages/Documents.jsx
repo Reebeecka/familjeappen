@@ -208,6 +208,11 @@ export default function Documents() {
   }
 
   const handleRemove = async (doc) => {
+    if (
+      !window.confirm(`Vill du ta bort dokumentet "${doc.name}"? Detta går inte att ångra.`)
+    )
+      return
+
     setError(null)
     setBusyId(doc.id)
     try {
@@ -337,7 +342,7 @@ export default function Documents() {
                             className="btn icon"
                             onClick={() => handleRemove(doc)}
                             disabled={busyId === doc.id}
-                            aria-label={`Ta bort ${doc.name}`}
+                            aria-label={`Ta bort dokumentet ${doc.name}`}
                             title="Ta bort"
                           >
                             🗑️
