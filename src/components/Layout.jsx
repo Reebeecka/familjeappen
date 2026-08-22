@@ -6,6 +6,8 @@ const navItems = [
   { to: '/', label: 'Hem', icon: '🏠', end: true },
   { to: '/uppgifter', label: 'Uppgifter', icon: '✅' },
   { to: '/inkop', label: 'Inköp', icon: '🛒' },
+  { to: '/kalender', label: 'Kalender', icon: '📅' },
+  { to: '/mer', label: 'Mer', icon: '☰' },
 ]
 
 export default function Layout({ children }) {

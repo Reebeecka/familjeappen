@@ -1,0 +1,35 @@
+.doc-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+
+.doc-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.doc-item {
+  gap: 0.6rem;
+}
+
+.doc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.doc-name {
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.doc-actions {
+  display: flex;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}

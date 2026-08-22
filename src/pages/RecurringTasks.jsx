@@ -1,0 +1,139 @@
+import { useState } from 'react'
+import { useCollection } from '../lib/useCollection'
+import './RecurringTasks.css'
+
+const WEEKDAYS = [
+  { value: 1, label: 'måndagar' },
+  { value: 2, label: 'tisdagar' },
+  { value: 3, label: 'onsdagar' },
+  { value: 4, label: 'torsdagar' },
+  { value: 5, label: 'fredagar' },
+  { value: 6, label: 'lördagar' },
+  { value: 0, label: 'söndagar' },
+]
+
+function describeCadence(task) {
+  if (task.cadence === 'daily') return 'Varje dag'
+  if (task.cadence === 'weekly') {
+    const day = WEEKDAYS.find((w) => w.value === Number(task.weekday))
+    return day ? `Varje vecka på ${day.label}` : 'Varje vecka'
+  }
+  if (task.cadence === 'monthly') {
+    return task.day_of_month
+      ? `Den ${Number(task.day_of_month)}:e varje månad`
+      : 'Varje månad'
+  }
+  return ''
+}
+
+export default function RecurringTasks() {
+  const { items, loading, error, add, update, remove } = useCollection('recurring_tasks')
+  const [title, setTitle] = useState('')
+  const [cadence, setCadence] = useState('daily')
+  const [weekday, setWeekday] = useState(1)
+  const [dayOfMonth, setDayOfMonth] = useState(1)
+
+  const handleAdd = async (event) => {
+    event.preventDefault()
+    const trimmed = title.trim()
+    if (!trimmed) return
+    await add({
+      title: trimmed,
+      cadence,
+      weekday: cadence === 'weekly' ? Number(weekday) : null,
+      day_of_month: cadence === 'monthly' ? Number(dayOfMonth) : null,
+      active: true,
+    })
+    setTitle('')
+    setCadence('daily')
+    setWeekday(1)
+    setDayOfMonth(1)
+  }
+
+  return (
+    <div className="page">
+      <h1 className="page-title">Återkommande 🔁</h1>
+
+      <form onSubmit={handleAdd} className="form card">
+        <label>
+          Titel
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Ny återkommande uppgift…"
+          />
+        </label>
+        <label>
+          Intervall
+          <select value={cadence} onChange={(e) => setCadence(e.target.value)}>
+            <option value="daily">Varje dag</option>
+            <option value="weekly">Varje vecka</option>
+            <option value="monthly">Varje månad</option>
+          </select>
+        </label>
+        {cadence === 'weekly' && (
+          <label>
+            Veckodag
+            <select value={weekday} onChange={(e) => setWeekday(Number(e.target.value))}>
+              {WEEKDAYS.map((day) => (
+                <option key={day.value} value={day.value}>
+                  {day.label.charAt(0).toUpperCase() + day.label.slice(1)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {cadence === 'monthly' && (
+          <label>
+            Dag i månaden
+            <select value={dayOfMonth} onChange={(e) => setDayOfMonth(Number(e.target.value))}>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                <option key={day} value={day}>
+                  Den {day}:e
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <button type="submit" className="btn primary">
+          Lägg till
+        </button>
+      </form>
+
+      {error && <p className="error">{error}</p>}
+      {loading && <p className="muted">Laddar…</p>}
+      {!loading && items.length === 0 && (
+        <p className="muted">Inga återkommande uppgifter än.</p>
+      )}
+
+      <ul className="list">
+        {items.map((task) => (
+          <li key={task.id} className={task.active ? 'list-item' : 'list-item done'}>
+            <div className="recur-body">
+              <span className="recur-title">{task.title}</span>
+              <span className="muted small">{describeCadence(task)}</span>
+            </div>
+            <div className="recur-actions">
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={() => update(task.id, { active: !task.active })}
+              >
+                {task.active ? 'Pausa' : 'Aktivera'}
+              </button>
+              <button
+                type="button"
+                className="btn icon"
+                onClick={() => remove(task.id)}
+                aria-label="Ta bort"
+              >
+                🗑️
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}

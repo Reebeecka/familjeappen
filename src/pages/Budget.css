@@ -1,0 +1,85 @@
+.budget-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.budget-summary .summary-balance {
+  grid-column: 1 / -1;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.summary-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.summary-value.income {
+  color: var(--success);
+}
+
+.summary-value.expense {
+  color: var(--danger);
+}
+
+.form-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.form-row > label {
+  flex: 1;
+}
+
+.budget-form select,
+.budget-form input[type='date'],
+.budget-form input[type='number'] {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 1rem;
+  color: var(--text);
+  background: #fff;
+}
+
+.budget-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+
+.budget-item-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.budget-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.budget-item-amount {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.budget-item-amount.income {
+  color: var(--success);
+}
+
+.budget-item-amount.expense {
+  color: var(--danger);
+}

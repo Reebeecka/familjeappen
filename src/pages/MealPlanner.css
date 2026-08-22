@@ -1,0 +1,28 @@
+.meal-day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.meal-day-heading {
+  font-size: 1rem;
+  color: var(--primary);
+  margin: 0;
+}
+
+.meal-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.meal-type {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.meal-slot .list-item {
+  background: var(--bg);
+  box-shadow: none;
+  border: 1px solid var(--border);
+}

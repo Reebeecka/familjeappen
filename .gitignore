@@ -20,6 +20,9 @@ dist-ssr
 PLANERING.md
 NOTISER.md
 
+# Supabase CLI-temp
+supabase/.temp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

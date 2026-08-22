@@ -1,0 +1,30 @@
+select {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 1rem;
+  color: var(--text);
+  background: #fff;
+  width: 100%;
+}
+
+select:focus {
+  outline: 2px solid var(--primary);
+  border-color: var(--primary);
+}
+
+.recur-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.recur-title {
+  font-weight: 600;
+}
+
+.recur-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
