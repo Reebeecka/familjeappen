@@ -57,8 +57,9 @@ export default function Chat() {
 
     let active = true
 
+    const channelName = `messages-${householdId}-${crypto.randomUUID()}`
     const channel = supabase
-      .channel(`messages-${householdId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {

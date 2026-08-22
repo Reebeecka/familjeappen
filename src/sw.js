@@ -1,7 +1,20 @@
-import { precacheAndRoute } from 'workbox-precaching'
+import { matchPrecache, precacheAndRoute } from 'workbox-precaching'
+import { registerRoute, setCatchHandler } from 'workbox-routing'
 
 // Precache appens filer (fylls i av vite-plugin-pwa vid bygget).
 precacheAndRoute(self.__WB_MANIFEST)
+
+// Försök hämta direkta sidnavigeringar från nätet. Vid avbrott visar
+// Workbox den precachade offline-sidan utan att påverka övriga resurser.
+registerRoute(({ request }) => request.mode === 'navigate', ({ request }) => fetch(request))
+
+setCatchHandler(async ({ request }) => {
+  if (request.destination === 'document') {
+    return (await matchPrecache('/offline.html')) ?? Response.error()
+  }
+
+  return Response.error()
+})
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim())
@@ -19,8 +32,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title, {
       body: payload.body,
-      icon: '/favicon.svg',
-      badge: '/favicon.svg',
+      icon: '/icon.svg',
+      badge: '/icon.svg',
       data: { url: payload.url ?? '/' },
       tag: payload.tag,
     }),

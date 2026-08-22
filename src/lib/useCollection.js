@@ -29,8 +29,9 @@ export function useCollection(table, orderBy = 'created_at') {
     }
     load()
 
+    const channelName = `${table}-${householdId}-${crypto.randomUUID()}`
     const channel = supabase
-      .channel(`${table}-${householdId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {

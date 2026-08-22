@@ -70,8 +70,9 @@ export default function ActivityFeed() {
 
     loadActivities()
 
+    const channelName = `activity-${householdId}-${crypto.randomUUID()}`
     const channel = supabase
-      .channel(`activity-${householdId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -133,8 +134,9 @@ export default function ActivityFeed() {
   useEffect(() => {
     if (!householdId || !supabase) return
 
+    const channelName = `activity-reactions-${householdId}-${crypto.randomUUID()}`
     const channel = supabase
-      .channel(`activity-reactions-${householdId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {

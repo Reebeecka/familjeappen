@@ -61,8 +61,9 @@ export function useListItems(listId) {
     }
     load()
 
+    const channelName = `list-items-${householdId}-${listId}-${crypto.randomUUID()}`
     const channel = supabase
-      .channel(`list-items-${householdId}-${listId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
