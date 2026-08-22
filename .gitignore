@@ -19,6 +19,7 @@ dist-ssr
 .env.local
 PLANERING.md
 NOTISER.md
+FORBATTRINGAR.md
 
 # Supabase CLI-temp
 supabase/.temp/

@@ -4,6 +4,20 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
 const BUCKET = 'documents'
+const ALL_FOLDERS = '__all__'
+const NO_FOLDER = '__none__'
+
+function getFolderName(doc) {
+  return doc.folder?.trim() || 'Utan mapp'
+}
+
+function isImage(doc) {
+  return doc.mime_type?.startsWith('image/')
+}
+
+function isPdf(doc) {
+  return doc.mime_type === 'application/pdf'
+}
 
 function formatSize(bytes) {
   if (bytes == null) return ''
@@ -28,6 +42,10 @@ export default function Documents() {
   const [error, setError] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [busyId, setBusyId] = useState(null)
+  const [folder, setFolder] = useState('')
+  const [folderFilter, setFolderFilter] = useState(ALL_FOLDERS)
+  const [previewUrls, setPreviewUrls] = useState({})
+  const [previewErrors, setPreviewErrors] = useState({})
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -81,6 +99,61 @@ export default function Documents() {
     }
   }, [householdId])
 
+  useEffect(() => {
+    const imageDocuments = items.filter(isImage)
+    if (imageDocuments.length === 0) {
+      setPreviewUrls({})
+      setPreviewErrors({})
+      return
+    }
+
+    let active = true
+
+    const loadPreviews = async () => {
+      const results = await Promise.all(
+        imageDocuments.map(async (doc) => {
+          const { data, error: signError } = await supabase.storage
+            .from(BUCKET)
+            .createSignedUrl(doc.storage_path, 3600)
+          return { doc, signedUrl: data?.signedUrl, signError }
+        }),
+      )
+      if (!active) return
+
+      const urls = {}
+      const errors = {}
+      results.forEach(({ doc, signedUrl, signError }) => {
+        if (signError) errors[doc.id] = 'Förhandsvisning kunde inte laddas.'
+        else urls[doc.id] = signedUrl
+      })
+      setPreviewUrls(urls)
+      setPreviewErrors(errors)
+    }
+
+    loadPreviews()
+
+    return () => {
+      active = false
+    }
+  }, [items])
+
+  const folders = [...new Set(items.map((doc) => doc.folder?.trim()).filter(Boolean))].sort(
+    (first, second) => first.localeCompare(second, 'sv'),
+  )
+
+  const filteredItems = items.filter((doc) => {
+    if (folderFilter === ALL_FOLDERS) return true
+    if (folderFilter === NO_FOLDER) return !doc.folder?.trim()
+    return doc.folder?.trim() === folderFilter
+  })
+
+  const groupedItems = filteredItems.reduce((groups, doc) => {
+    const folderName = getFolderName(doc)
+    if (!groups[folderName]) groups[folderName] = []
+    groups[folderName].push(doc)
+    return groups
+  }, Object.create(null))
+
   const handleUpload = async (event) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -97,6 +170,7 @@ export default function Documents() {
         storage_path: path,
         size: file.size,
         mime_type: file.type,
+        folder: folder.trim() || null,
         household_id: householdId,
         created_by: user?.id,
       })
@@ -109,13 +183,13 @@ export default function Documents() {
     }
   }
 
-  const handleOpen = async (doc) => {
+  const handleOpen = async (doc, download = false) => {
     setError(null)
     setBusyId(doc.id)
     try {
       const { data, error: signError } = await supabase.storage
         .from(BUCKET)
-        .createSignedUrl(doc.storage_path, 60)
+        .createSignedUrl(doc.storage_path, 60, download ? { download: doc.name } : undefined)
       if (signError) throw signError
       window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
     } catch (err) {
@@ -151,6 +225,22 @@ export default function Documents() {
 
       <div className="card doc-upload">
         <p className="muted">Ladda upp kvitton, avtal och andra viktiga filer.</p>
+        <label className="doc-folder-field">
+          Mapp
+          <input
+            type="text"
+            list="document-folders"
+            value={folder}
+            onChange={(event) => setFolder(event.target.value)}
+            placeholder="Till exempel Försäkringar"
+            disabled={uploading}
+          />
+          <datalist id="document-folders">
+            {folders.map((folderName) => (
+              <option key={folderName} value={folderName} />
+            ))}
+          </datalist>
+        </label>
         <label className="btn primary doc-upload-btn">
           {uploading ? 'Laddar upp…' : 'Välj fil att ladda upp'}
           <input
@@ -168,40 +258,92 @@ export default function Documents() {
       {loading && <p className="muted">Laddar…</p>}
       {!loading && items.length === 0 && <p className="muted">Inga dokument ännu.</p>}
 
-      <ul className="list">
-        {items.map((doc) => (
-          <li key={doc.id} className="list-item doc-item">
-            <div className="doc-info">
-              <span className="doc-name">{doc.name}</span>
-              <span className="muted small">
-                {formatSize(doc.size)}
-                {doc.size != null ? ' · ' : ''}
-                {formatDate(doc.created_at)}
-              </span>
-            </div>
-            <div className="doc-actions">
-              <button
-                type="button"
-                className="btn icon"
-                onClick={() => handleOpen(doc)}
-                disabled={busyId === doc.id}
-                aria-label="Öppna"
-              >
-                ⬇️
-              </button>
-              <button
-                type="button"
-                className="btn icon"
-                onClick={() => handleRemove(doc)}
-                disabled={busyId === doc.id}
-                aria-label="Ta bort"
-              >
-                🗑️
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {!loading && items.length > 0 && (
+        <>
+          <label className="doc-filter">
+            Visa mapp
+            <select value={folderFilter} onChange={(event) => setFolderFilter(event.target.value)}>
+              <option value={ALL_FOLDERS}>Alla mappar</option>
+              {folders.map((folderName) => (
+                <option key={folderName} value={folderName}>
+                  {folderName}
+                </option>
+              ))}
+              {items.some((doc) => !doc.folder?.trim()) && (
+                <option value={NO_FOLDER}>Utan mapp</option>
+              )}
+            </select>
+          </label>
+
+          {filteredItems.length === 0 && <p className="muted">Inga dokument i den mappen.</p>}
+
+          <div className="doc-groups">
+            {Object.entries(groupedItems).map(([folderName, documents]) => (
+              <section key={folderName} className="doc-group">
+                <h2 className="doc-group-title">📁 {folderName}</h2>
+                <ul className="list">
+                  {documents.map((doc) => (
+                    <li key={doc.id} className="list-item doc-item">
+                      {isImage(doc) && previewUrls[doc.id] && (
+                        <img
+                          className="doc-preview"
+                          src={previewUrls[doc.id]}
+                          alt={`Förhandsvisning av ${doc.name}`}
+                        />
+                      )}
+                      <div className="doc-details">
+                        <div className="doc-info">
+                          <span className="doc-name">{doc.name}</span>
+                          <span className="muted small">
+                            {formatSize(doc.size)}
+                            {doc.size != null ? ' · ' : ''}
+                            {formatDate(doc.created_at)}
+                          </span>
+                          {previewErrors[doc.id] && (
+                            <span className="error small">{previewErrors[doc.id]}</span>
+                          )}
+                        </div>
+                        <div className="doc-actions">
+                          {isPdf(doc) && (
+                            <button
+                              type="button"
+                              className="btn ghost doc-preview-btn"
+                              onClick={() => handleOpen(doc)}
+                              disabled={busyId === doc.id}
+                            >
+                              Förhandsgranska
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn icon"
+                            onClick={() => handleOpen(doc, true)}
+                            disabled={busyId === doc.id}
+                            aria-label={`Ladda ner ${doc.name}`}
+                            title="Ladda ner"
+                          >
+                            ⬇️
+                          </button>
+                          <button
+                            type="button"
+                            className="btn icon"
+                            onClick={() => handleRemove(doc)}
+                            disabled={busyId === doc.id}
+                            aria-label={`Ta bort ${doc.name}`}
+                            title="Ta bort"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }

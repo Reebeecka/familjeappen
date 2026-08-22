@@ -1,11 +1,11 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import HouseholdSetup from '../pages/HouseholdSetup'
+import './Layout.css'
 
 const navItems = [
   { to: '/', label: 'Hem', icon: '🏠', end: true },
-  { to: '/uppgifter', label: 'Uppgifter', icon: '✅' },
-  { to: '/inkop', label: 'Inköp', icon: '🛒' },
+  { to: '/listor', label: 'Listor', icon: '📝' },
   { to: '/kalender', label: 'Kalender', icon: '📅' },
   { to: '/mer', label: 'Mer', icon: '☰' },
 ]

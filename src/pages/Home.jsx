@@ -2,71 +2,206 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import ActivityFeed from '../components/ActivityFeed'
 import NotificationButton from '../components/NotificationButton'
+import './Home.css'
+
+const QUICK_LINKS = [
+  { to: '/listor', label: 'Listor', icon: '📝' },
+  { to: '/kalender', label: 'Kalender', icon: '📅' },
+  { to: '/maltider', label: 'Måltider', icon: '🍽️' },
+  { to: '/budget', label: 'Budget', icon: '💰' },
+  { to: '/recept', label: 'Recept', icon: '📖' },
+  { to: '/dokument', label: 'Dokument', icon: '📁' },
+]
+
+const MEAL_LABELS = {
+  frukost: 'Frukost',
+  lunch: 'Lunch',
+  middag: 'Middag',
+}
+
+function toDateKey(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function formatEventTime(event) {
+  if (event.all_day) return 'Heldag'
+  return new Date(event.start_at).toLocaleTimeString('sv-SE', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 export default function Home() {
   const { profile, householdId } = useAuth()
   const [household, setHousehold] = useState(null)
-  const [counts, setCounts] = useState({ tasks: 0, shopping: 0 })
+  const [todayEvents, setTodayEvents] = useState([])
+  const [todayMeals, setTodayMeals] = useState([])
+  const [todayLoading, setTodayLoading] = useState(true)
+  const [todayError, setTodayError] = useState(null)
 
   useEffect(() => {
     if (!householdId) return
 
-    supabase
-      .from('households')
-      .select('*')
-      .eq('id', householdId)
-      .single()
-      .then(({ data }) => setHousehold(data))
+    let active = true
 
-    const loadCounts = async () => {
-      const [tasks, shopping] = await Promise.all([
+    const loadHome = async () => {
+      setTodayLoading(true)
+      setTodayError(null)
+
+      const today = new Date()
+      const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
+      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+      const dateKey = toDateKey(today)
+      const [householdResult, eventsResult, mealsResult] = await Promise.all([
         supabase
-          .from('tasks')
-          .select('id', { count: 'exact', head: true })
-          .eq('done', false),
+          .from('households')
+          .select('name, invite_code')
+          .eq('id', householdId)
+          .single(),
         supabase
-          .from('shopping_items')
-          .select('id', { count: 'exact', head: true })
-          .eq('checked', false),
+          .from('calendar_events')
+          .select('id, title, start_at, all_day, color')
+          .eq('household_id', householdId)
+          .gte('start_at', startOfToday.toISOString())
+          .lt('start_at', tomorrow.toISOString())
+          .order('start_at', { ascending: true }),
+        supabase
+          .from('meals')
+          .select('id, title, meal_type')
+          .eq('household_id', householdId)
+          .eq('meal_date', dateKey)
+          .order('meal_type', { ascending: true }),
       ])
-      setCounts({ tasks: tasks.count ?? 0, shopping: shopping.count ?? 0 })
+
+      if (!active) return
+
+      setHousehold(householdResult.data)
+      setTodayEvents(eventsResult.data ?? [])
+      setTodayMeals(mealsResult.data ?? [])
+      if (eventsResult.error || mealsResult.error) {
+        setTodayError('Dagens översikt kunde inte laddas.')
+      }
+      setTodayLoading(false)
     }
-    loadCounts()
+
+    loadHome()
+
+    return () => {
+      active = false
+    }
   }, [householdId])
 
   return (
-    <div className="page">
-      <h1 className="page-title">Hej {profile?.display_name || 'där'}! 👋</h1>
-
-      {household && (
-        <div className="card invite-card">
-          <p className="muted">Hushåll</p>
-          <p className="household-name">{household.name}</p>
-          <p className="muted">Dela denna kod med din partner så ni delar allt:</p>
-          <p className="invite-code">{household.invite_code}</p>
+    <div className="page home-page">
+      <header className="home-greeting">
+        <span
+          className="home-avatar"
+          style={{ '--avatar-color': profile?.color || 'var(--primary)' }}
+          aria-hidden="true"
+        >
+          {profile?.avatar || '👋'}
+        </span>
+        <div>
+          <p className="muted small home-eyebrow">Välkommen hem</p>
+          <h1 className="page-title">Hej {profile?.display_name || 'där'}!</h1>
         </div>
-      )}
+      </header>
 
-      <NotificationButton />
+      <section className="card today-card" aria-labelledby="today-heading">
+        <div className="section-heading-row">
+          <h2 id="today-heading" className="home-section-heading">
+            Idag
+          </h2>
+          <span aria-hidden="true">☀️</span>
+        </div>
 
-      <div className="dashboard-grid">
-        <Link to="/uppgifter" className="card dash-card">
-          <span className="dash-icon">✅</span>
-          <span className="dash-label">Uppgifter</span>
-          <span className="dash-count">{counts.tasks} kvar</span>
-        </Link>
-        <Link to="/inkop" className="card dash-card">
-          <span className="dash-icon">🛒</span>
-          <span className="dash-label">Inköp</span>
-          <span className="dash-count">{counts.shopping} kvar</span>
-        </Link>
-      </div>
+        {todayLoading && <p className="muted small today-message">Laddar dagens planer…</p>}
+        {todayError && <p className="error today-message">{todayError}</p>}
+        {!todayLoading && !todayError && todayEvents.length === 0 && todayMeals.length === 0 && (
+          <p className="muted small today-message">Inget planerat idag – njut av dagen.</p>
+        )}
 
-      <p className="muted small">
-        Fler funktioner (kalender, budget, måltider, dokument) läggs till fas för fas – se
-        PLANERING.md.
-      </p>
+        {!todayLoading && !todayError && (todayEvents.length > 0 || todayMeals.length > 0) && (
+          <div className="today-columns">
+            <div>
+              <h3 className="today-subheading">Kalender</h3>
+              {todayEvents.length === 0 ? (
+                <p className="muted small today-empty">Inga händelser.</p>
+              ) : (
+                <ul className="today-list">
+                  {todayEvents.map((event) => (
+                    <li key={event.id}>
+                      <span
+                        className="today-dot"
+                        style={{ '--event-color': event.color || 'var(--primary)' }}
+                        aria-hidden="true"
+                      />
+                      <span>
+                        <strong>{formatEventTime(event)}</strong> {event.title}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div>
+              <h3 className="today-subheading">Måltider</h3>
+              {todayMeals.length === 0 ? (
+                <p className="muted small today-empty">Inga måltider.</p>
+              ) : (
+                <ul className="today-list">
+                  {todayMeals.map((meal) => (
+                    <li key={meal.id}>
+                      <span aria-hidden="true">🍴</span>
+                      <span>
+                        <strong>{MEAL_LABELS[meal.meal_type] || meal.meal_type}:</strong>{' '}
+                        {meal.title}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <ActivityFeed />
+
+      <section aria-labelledby="quick-links-heading">
+        <h2 id="quick-links-heading" className="home-section-heading">
+          Snabblänkar
+        </h2>
+        <div className="dashboard-grid home-links">
+          {QUICK_LINKS.map((item) => (
+            <Link to={item.to} className="card dash-card home-link" key={item.to}>
+              <span className="dash-icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <span className="dash-label">{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="home-utilities" aria-label="Hushåll och notiser">
+        <NotificationButton />
+
+        {household && (
+          <div className="card invite-card compact-invite-card">
+            <div>
+              <p className="household-name">{household.name}</p>
+              <p className="muted small invite-help">Bjud in en familjemedlem med koden</p>
+            </div>
+            <p className="invite-code compact-invite-code">{household.invite_code}</p>
+          </div>
+        )}
+      </section>
     </div>
   )
 }

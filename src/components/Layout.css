@@ -1,0 +1,15 @@
+.bottom-nav .nav-item {
+  min-width: 0;
+  padding-inline: 0.35rem;
+}
+
+.bottom-nav .nav-icon {
+  line-height: 1;
+}
+
+.bottom-nav .nav-label {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,205 @@
+.settings-page {
+  gap: 1.75rem;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.settings-section-heading h2 {
+  margin-bottom: 0.2rem;
+  font-size: 1.15rem;
+}
+
+.settings-section-heading p,
+.settings-message,
+.settings-invite-card p {
+  margin: 0;
+}
+
+.settings-card {
+  padding: 1.1rem;
+}
+
+.preference-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.preference-row {
+  position: relative;
+  display: flex;
+  min-height: 3.75rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.preference-row + .preference-row {
+  border-top: 1px solid var(--border);
+}
+
+.preference-label,
+.preference-description {
+  display: block;
+}
+
+.preference-label {
+  font-weight: 650;
+}
+
+.preference-description {
+  margin-top: 0.1rem;
+}
+
+.switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.switch-track {
+  display: flex;
+  width: 3rem;
+  height: 1.7rem;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0.2rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.switch-thumb {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: var(--muted);
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.switch-input:checked + .switch-track {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.switch-input:checked + .switch-track .switch-thumb {
+  background: var(--on-primary);
+  transform: translateX(1.25rem);
+}
+
+.switch-input:focus-visible + .switch-track {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.switch-input:disabled + .switch-track {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.settings-card > .error {
+  margin-top: 0.8rem;
+}
+
+.member-list {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  flex-direction: column;
+  list-style: none;
+}
+
+.member-row {
+  display: flex;
+  min-height: 3.75rem;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.member-row + .member-row {
+  border-top: 1px solid var(--border);
+}
+
+.member-avatar {
+  display: grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid var(--member-color);
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.member-name {
+  font-weight: 650;
+}
+
+.settings-invite-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.settings-invite-card .household-name {
+  margin: 0;
+}
+
+.settings-invite-card .invite-code {
+  margin: 0.35rem 0 0;
+}
+
+.theme-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+}
+
+.theme-option {
+  min-width: 0;
+  padding: 0.65rem 0.35rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.theme-option.active {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.theme-option:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 420px) {
+  .preference-description {
+    max-width: 14rem;
+  }
+}

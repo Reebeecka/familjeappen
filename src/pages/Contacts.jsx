@@ -2,15 +2,21 @@ import { useEffect, useMemo, useState } from 'react'
 import { useCollection } from '../lib/useCollection'
 import './Contacts.css'
 
-const emptyForm = { name: '', phone: '', email: '', category: '', note: '' }
+const emptyForm = { name: '', phone: '', email: '', birthday: '', category: '', note: '' }
 
 const cleanForm = (form) => ({
   name: form.name.trim(),
   phone: form.phone.trim() || null,
   email: form.email.trim() || null,
+  birthday: form.birthday || null,
   category: form.category.trim() || null,
   note: form.note.trim() || null,
 })
+
+const formatBirthday = (birthday) => {
+  const [, month, day] = birthday.split('-')
+  return `${Number(day)}/${Number(month)}`
+}
 
 export default function Contacts() {
   const { items, loading, error, add, update, remove } = useCollection('contacts')
@@ -46,6 +52,7 @@ export default function Contacts() {
       name: contact.name ?? '',
       phone: contact.phone ?? '',
       email: contact.email ?? '',
+      birthday: contact.birthday ?? '',
       category: contact.category ?? '',
       note: contact.note ?? '',
     })
@@ -97,6 +104,14 @@ export default function Contacts() {
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             placeholder="Valfritt"
+          />
+        </label>
+        <label>
+          Födelsedag
+          <input
+            type="date"
+            value={form.birthday}
+            onChange={(e) => setForm({ ...form, birthday: e.target.value })}
           />
         </label>
         <label>
@@ -160,6 +175,14 @@ export default function Contacts() {
                   />
                 </label>
                 <label>
+                  Födelsedag
+                  <input
+                    type="date"
+                    value={editForm.birthday}
+                    onChange={(e) => setEditForm({ ...editForm, birthday: e.target.value })}
+                  />
+                </label>
+                <label>
                   Kategori
                   <input
                     type="text"
@@ -200,6 +223,11 @@ export default function Contacts() {
                     <a className="contact-link" href={`mailto:${contact.email}`}>
                       ✉️ {contact.email}
                     </a>
+                  )}
+                  {contact.birthday && (
+                    <span className="muted small">
+                      🎂 Födelsedag {formatBirthday(contact.birthday)}
+                    </span>
                   )}
                   {contact.note && <span className="muted small">{contact.note}</span>}
                 </div>

@@ -1,3 +1,10 @@
+.budget-month-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-transform: capitalize;
+}
+
 .budget-summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -32,6 +39,124 @@
   color: var(--danger);
 }
 
+.budget-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.budget-section-heading h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.budget-goal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.budget-goal.over-goal .budget-section-heading strong {
+  color: var(--danger);
+}
+
+.budget-progress {
+  height: 0.7rem;
+  overflow: hidden;
+  background: var(--border);
+  border-radius: var(--radius);
+}
+
+.budget-progress span {
+  display: block;
+  height: 100%;
+  background: var(--secondary);
+  border-radius: inherit;
+  transition: width 0.2s ease;
+}
+
+.budget-goal.over-goal .budget-progress span {
+  background: var(--danger);
+}
+
+.budget-goal-form input {
+  min-width: 0;
+}
+
+.budget-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  color: var(--muted);
+}
+
+.chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.chart-legend i {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 2px;
+}
+
+.income-dot,
+.income-bar {
+  background: var(--success);
+}
+
+.expense-dot,
+.expense-bar {
+  background: var(--danger);
+}
+
+.chart-bars {
+  height: 150px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  align-items: end;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.chart-month {
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: capitalize;
+}
+
+.chart-pair {
+  height: calc(100% - 1.5rem);
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.15rem;
+}
+
+.chart-bar {
+  width: min(0.85rem, 38%);
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+}
+
 .form-row {
   display: flex;
   gap: 0.5rem;
@@ -39,9 +164,13 @@
 
 .form-row > label {
   flex: 1;
+  min-width: 0;
 }
 
 .budget-form select,
+.budget-settings select,
+.budget-settings input[type='number'],
+.budget-goal input[type='number'],
 .budget-form input[type='date'],
 .budget-form input[type='number'] {
   padding: 0.7rem 0.8rem;
@@ -50,6 +179,16 @@
   font-size: 1rem;
   color: var(--text);
   background: #fff;
+}
+
+.budget-settings summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.budget-settings[open] summary {
+  margin-bottom: 0.75rem;
 }
 
 .budget-item {
@@ -69,11 +208,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  min-width: 0;
 }
 
 .budget-item-amount {
   font-weight: 700;
   white-space: nowrap;
+  margin-left: auto;
 }
 
 .budget-item-amount.income {
@@ -82,4 +223,24 @@
 
 .budget-item-amount.expense {
   color: var(--danger);
+}
+
+.budget-original-amount {
+  text-align: right;
+  padding-right: 2.7rem;
+}
+
+@media (max-width: 430px) {
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .form-row > label:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .budget-goal-form {
+    flex-direction: column;
+  }
 }

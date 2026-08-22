@@ -1,12 +1,18 @@
 import { Link } from 'react-router-dom'
 
 const menuItems = [
+  { to: '/min-dag', icon: '🌅', label: 'Min dag' },
+  { to: '/sok', icon: '🔍', label: 'Sök' },
+  { to: '/chatt', icon: '💬', label: 'Chatt' },
   { to: '/kalender', icon: '📅', label: 'Kalender' },
   { to: '/maltider', icon: '🍽️', label: 'Måltider' },
   { to: '/aterkommande', icon: '🔁', label: 'Återkommande' },
+  { to: '/recept', icon: '📖', label: 'Recept' },
   { to: '/budget', icon: '💰', label: 'Budget' },
   { to: '/kontakter', icon: '📇', label: 'Kontakter' },
   { to: '/dokument', icon: '📁', label: 'Dokument' },
+  { to: '/profil', icon: '👤', label: 'Min profil' },
+  { to: '/installningar', icon: '⚙️', label: 'Inställningar' },
 ]
 
 export default function Menu() {

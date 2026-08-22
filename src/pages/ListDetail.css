@@ -1,0 +1,205 @@
+.list-detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.list-detail-header .page-title {
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+}
+
+.list-detail-back {
+  align-self: flex-start;
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.list-detail-form select,
+.list-detail-assignment select,
+.list-detail-edit-fields select,
+.list-detail-form input[type='date'],
+.list-detail-edit-fields input[type='date'] {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.list-detail-form select:focus,
+.list-detail-assignment select:focus,
+.list-detail-edit-fields select:focus,
+.list-detail-form input[type='date']:focus,
+.list-detail-edit-fields input[type='date']:focus {
+  outline: 3px solid rgba(85, 117, 101, 0.18);
+  outline-offset: 1px;
+  border-color: var(--primary);
+}
+
+.list-detail-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.list-detail-item {
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.list-detail-item.overdue {
+  border-color: var(--danger);
+}
+
+.list-detail-item.high-priority:not(.overdue) {
+  border-left: 4px solid var(--secondary);
+}
+
+.list-detail-item-content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.list-detail-list > li,
+.list-detail-subtasks > li {
+  list-style: none;
+}
+
+.list-detail-status {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.list-detail-priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: fit-content;
+  border-radius: 999px;
+  background: rgba(169, 87, 67, 0.12);
+  color: var(--secondary);
+  padding: 0.15rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.list-detail-priority-badge::before {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+  content: '';
+}
+
+.list-detail-due {
+  font-size: 0.82rem;
+}
+
+.list-detail-due.overdue {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.list-detail-item .check-label {
+  min-width: 0;
+}
+
+.list-detail-item .check-label span {
+  overflow-wrap: anywhere;
+}
+
+.list-detail-member {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.list-detail-member-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.list-detail-assignment {
+  max-width: 240px;
+}
+
+.list-detail-assignment select,
+.list-detail-edit-fields select,
+.list-detail-edit-fields input[type='date'] {
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+.list-detail-edit-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  max-width: 360px;
+}
+
+.list-detail-add-subtask {
+  align-self: flex-start;
+  color: var(--primary);
+}
+
+.list-detail-subtask-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-top: 0.25rem;
+}
+
+.list-detail-subtask-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.list-detail-subtasks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0.55rem 0 0 1.1rem;
+  padding: 0 0 0 0.75rem;
+  border-left: 2px solid var(--border);
+}
+
+.list-detail-item.subtask {
+  box-shadow: none;
+}
+
+.list-detail-remove {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 430px) {
+  .list-detail-fields,
+  .list-detail-edit-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .list-detail-assignment {
+    max-width: none;
+  }
+
+  .list-detail-edit-fields {
+    max-width: none;
+  }
+
+  .list-detail-subtasks {
+    margin-left: 0.45rem;
+    padding-left: 0.5rem;
+  }
+}

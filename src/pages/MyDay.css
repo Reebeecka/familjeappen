@@ -1,0 +1,132 @@
+.my-day-header p {
+  margin: 0.2rem 0 0;
+}
+
+.my-day-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+
+.my-day-empty span {
+  font-size: 2rem;
+}
+
+.my-day-empty p {
+  margin: 0;
+}
+
+.my-day-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.my-day-section {
+  padding: 1.1rem;
+}
+
+.my-day-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.my-day-section-heading h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.my-day-count {
+  min-width: 1.7rem;
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  background: var(--soft-accent);
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.my-day-section > .muted {
+  margin: 0;
+}
+
+.my-day-section li {
+  list-style: none;
+}
+
+.my-day-section .list {
+  gap: 0;
+}
+
+.my-day-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  min-height: 2.75rem;
+  border-top: 1px solid var(--border);
+  padding: 0.65rem 0.1rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.my-day-section li:first-child .my-day-row {
+  border-top: 0;
+  padding-top: 0.2rem;
+}
+
+.my-day-section li:last-child .my-day-row {
+  padding-bottom: 0.2rem;
+}
+
+.my-day-row > span:first-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow-wrap: anywhere;
+}
+
+.my-day-row small {
+  margin-top: 0.1rem;
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.my-day-due,
+.my-day-time,
+.my-day-meal-type {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 0.18rem 0.5rem;
+  background: var(--soft-accent);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.my-day-due.today {
+  background: var(--soft-accent);
+  color: var(--primary);
+}
+
+.my-day-due.overdue {
+  border: 1px solid var(--danger);
+  background: var(--surface);
+  color: var(--danger);
+}
+
+@media (max-width: 380px) {
+  .my-day-section {
+    padding: 0.95rem;
+  }
+
+  .my-day-row {
+    align-items: flex-start;
+  }
+}

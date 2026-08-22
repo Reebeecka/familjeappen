@@ -1,0 +1,96 @@
+.profile-form {
+  gap: 1.25rem;
+}
+
+.profile-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-avatar {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid var(--profile-color);
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 1.65rem;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.profile-preview-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.profile-preview .muted {
+  margin: 0.15rem 0 0;
+}
+
+.profile-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.profile-fieldset legend {
+  margin-bottom: 0.55rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.color-palette,
+.avatar-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.color-option,
+.avatar-option {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  place-items: center;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.color-option {
+  background: var(--option-color);
+}
+
+.avatar-option {
+  background: var(--bg);
+  font-size: 1.4rem;
+}
+
+.color-option.selected,
+.avatar-option.selected {
+  border-color: var(--text);
+  box-shadow:
+    0 0 0 3px var(--surface),
+    0 0 0 5px var(--primary);
+}
+
+.color-option:focus-visible,
+.avatar-option:focus-visible {
+  outline: 3px solid rgba(85, 117, 101, 0.25);
+  outline-offset: 3px;
+}
+
+.profile-form .error,
+.profile-form .info {
+  margin: 0;
+}

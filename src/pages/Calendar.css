@@ -1,5 +1,6 @@
 input[type='date'],
-input[type='time'] {
+input[type='time'],
+select {
   padding: 0.7rem 0.8rem;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -9,6 +10,15 @@ input[type='time'] {
   width: 100%;
 }
 
+input[type='color'] {
+  width: 100%;
+  height: 2.75rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+}
+
 .cal-row {
   display: flex;
   gap: 0.75rem;
@@ -16,6 +26,152 @@ input[type='time'] {
 
 .cal-row label {
   flex: 1;
+}
+
+.cal-view-toggle {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.25rem;
+  align-self: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.cal-view-toggle .btn {
+  min-width: 5.5rem;
+  padding: 0.5rem 0.8rem;
+}
+
+.cal-month {
+  padding: 0.8rem;
+}
+
+.cal-month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.cal-month-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  text-transform: capitalize;
+}
+
+.cal-month-header .btn {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.cal-weekdays,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.cal-weekdays span {
+  padding: 0.35rem 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.cal-grid {
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.cal-day {
+  min-width: 0;
+  min-height: 4.7rem;
+  padding: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  overflow: hidden;
+  color: var(--text);
+  background: var(--surface);
+  border: 0;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.cal-day.outside {
+  color: var(--muted);
+  background: var(--bg);
+  opacity: 0.65;
+}
+
+.cal-day.today .cal-day-number {
+  display: inline-flex;
+  width: 1.45rem;
+  height: 1.45rem;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--primary);
+  border-radius: 50%;
+}
+
+.cal-day.selected {
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.cal-day-number {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.cal-day-dots {
+  min-height: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.18rem;
+}
+
+.cal-color-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: 0 0 auto;
+  display: inline-block;
+  border-radius: 50%;
+}
+
+.cal-birthday-dot {
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
+.cal-holiday-label {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--danger);
+  font-size: 0.58rem;
+  line-height: 1.15;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-selected-day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cal-special-day {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  color: var(--muted);
+  background: var(--surface);
+  border-left: 3px solid var(--secondary);
+  border-radius: 8px;
+  font-size: 0.85rem;
 }
 
 .cal-group {
@@ -32,9 +188,13 @@ input[type='time'] {
 
 .cal-event {
   align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.65rem;
 }
 
 .cal-event-body {
+  min-width: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -47,4 +207,19 @@ input[type='time'] {
 
 .cal-event-title {
   font-weight: 600;
+}
+
+@media (max-width: 420px) {
+  .cal-month {
+    padding: 0.55rem;
+  }
+
+  .cal-day {
+    min-height: 4rem;
+    padding: 0.2rem;
+  }
+
+  .cal-holiday-label {
+    font-size: 0.52rem;
+  }
 }
