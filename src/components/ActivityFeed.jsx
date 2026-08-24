@@ -28,7 +28,9 @@ function isEventEntity(entity) {
 }
 
 function activityLink(activity) {
-  if (activity.path) return activity.path
+  if (typeof activity.path === 'string' && activity.path.startsWith('/')) {
+    return activity.path
+  }
   if (activity.entity === 'inköp' && activity.entity_id) return `/listor/${activity.entity_id}`
   if (isTodoEntity(activity.entity) && activity.entity_id) return `/listor/${activity.entity_id}`
   if (isEventEntity(activity.entity)) {
