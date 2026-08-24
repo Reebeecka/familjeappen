@@ -74,6 +74,57 @@ export default function Lists() {
     <div className="page">
       <h1 className="page-title">Listor</h1>
 
+      {error && <p className="error">{error}</p>}
+      {loading && <Spinner />}
+      {!loading && lists.length === 0 && (
+        <EmptyState
+          icon={NotebookPen}
+          title="Inga listor än"
+          description="Skapa familjens första lista nedan."
+        />
+      )}
+
+      {lists.length > 0 && (
+        <div className="lists-grid">
+          {lists.map((list) => {
+            const remaining = remainingByList.get(list.id) ?? 0
+
+            return (
+              <article key={list.id} className="card lists-card">
+                <Link to={`/listor/${list.id}`} className="lists-card-link">
+                  <span className="lists-card-icon" aria-hidden="true">
+                    <ListIcon icon={list.icon} type={list.type} size={22} />
+                  </span>
+                  <span className="lists-card-content">
+                    <span className="lists-card-name">{list.name}</span>
+                    <span className={`lists-remaining ${remaining === 0 ? 'is-complete' : ''}`}>
+                      <strong>{remaining}</strong>
+                      <span>{remaining === 1 ? 'punkt kvar' : 'punkter kvar'}</span>
+                    </span>
+                  </span>
+                </Link>
+                <button
+                  type="button"
+                  className="btn icon lists-delete"
+                  onClick={() => {
+                    if (
+                      !window.confirm(
+                        `Vill du ta bort listan "${list.name}"? Detta går inte att ångra.`,
+                      )
+                    )
+                      return
+                    remove(list.id)
+                  }}
+                  aria-label={`Ta bort listan ${list.name}`}
+                >
+                  <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />
+                </button>
+              </article>
+            )
+          })}
+        </div>
+      )}
+
       <form onSubmit={handleAdd} className="form card lists-form" aria-busy={submitting}>
         <label>
           Listnamn
@@ -122,55 +173,6 @@ export default function Lists() {
           {submitting ? 'Skapar…' : 'Skapa lista'}
         </button>
       </form>
-
-      {error && <p className="error">{error}</p>}
-      {loading && <Spinner />}
-      {!loading && lists.length === 0 && (
-        <EmptyState
-          icon={NotebookPen}
-          title="Inga listor än"
-          description="Skapa familjens första lista ovan."
-        />
-      )}
-
-      <div className="lists-grid">
-        {lists.map((list) => {
-          const remaining = remainingByList.get(list.id) ?? 0
-
-          return (
-            <article key={list.id} className="card lists-card">
-              <Link to={`/listor/${list.id}`} className="lists-card-link">
-                <span className="lists-card-icon" aria-hidden="true">
-                  <ListIcon icon={list.icon} type={list.type} size={22} />
-                </span>
-                <span className="lists-card-content">
-                  <span className="lists-card-name">{list.name}</span>
-                  <span className={`lists-remaining ${remaining === 0 ? 'is-complete' : ''}`}>
-                    <strong>{remaining}</strong>
-                    <span>{remaining === 1 ? 'punkt kvar' : 'punkter kvar'}</span>
-                  </span>
-                </span>
-              </Link>
-              <button
-                type="button"
-                className="btn icon lists-delete"
-                onClick={() => {
-                  if (
-                    !window.confirm(
-                      `Vill du ta bort listan "${list.name}"? Detta går inte att ångra.`,
-                    )
-                  )
-                    return
-                  remove(list.id)
-                }}
-                aria-label={`Ta bort listan ${list.name}`}
-              >
-                <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />
-              </button>
-            </article>
-          )
-        })}
-      </div>
     </div>
   )
 }
