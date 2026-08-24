@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import EmptyState from '../components/EmptyState'
 import NotificationButton from '../components/NotificationButton'
+import Spinner from '../components/Spinner'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 import { useHouseholdMembers } from '../lib/useHouseholdMembers'
@@ -177,7 +179,7 @@ export default function Settings() {
 
         <div className="card settings-card">
           {prefsLoading ? (
-            <p className="muted small settings-message">Laddar notisinställningar…</p>
+            <Spinner />
           ) : (
             <div className="preference-list">
               {NOTIFICATION_OPTIONS.map((option) => (
@@ -216,7 +218,7 @@ export default function Settings() {
 
         <div className="card settings-card">
           {membersLoading ? (
-            <p className="muted small settings-message">Laddar medlemmar…</p>
+            <Spinner />
           ) : (
             <ul className="member-list">
               {members.map((member) => (
@@ -238,12 +240,16 @@ export default function Settings() {
           )}
 
           {!membersLoading && members.length === 0 && (
-            <p className="muted small settings-message">Inga medlemmar hittades.</p>
+            <EmptyState
+              icon="👥"
+              title="Inga medlemmar"
+              description="Inga hushållsmedlemmar hittades."
+            />
           )}
         </div>
 
         <div className="card invite-card settings-invite-card">
-          {householdLoading && <p className="muted small">Laddar inbjudningskod…</p>}
+          {householdLoading && <Spinner />}
           {householdError && (
             <p className="error settings-message" role="alert">
               {householdError}

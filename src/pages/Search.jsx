@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import './Search.css'
 
 const SEARCH_GROUPS = [
@@ -148,21 +150,22 @@ export default function Search() {
       </label>
 
       {error && <p className="error">{error}</p>}
-      {loading && <p className="muted">Söker…</p>}
+      {loading && <Spinner label="Söker…" />}
 
       {!hasSearched && !loading && (
-        <div className="card search-empty">
-          <span aria-hidden="true">🔎</span>
-          <p className="muted">Skriv något för att söka i familjens innehåll.</p>
-        </div>
+        <EmptyState
+          icon="🔍"
+          title="Vad letar du efter?"
+          description="Skriv något för att söka i familjens innehåll."
+        />
       )}
 
       {hasSearched && !loading && visibleGroups.length === 0 && (
-        <div className="card search-empty">
-          <span aria-hidden="true">🤷</span>
-          <p>Inga träffar på ”{debouncedSearch}”.</p>
-          <p className="muted small">Prova ett annat eller kortare sökord.</p>
-        </div>
+        <EmptyState
+          icon="🔍"
+          title={`Inga träffar på ”${debouncedSearch}”`}
+          description="Prova ett annat eller kortare sökord."
+        />
       )}
 
       {hasSearched && !loading && (

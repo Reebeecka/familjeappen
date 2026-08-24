@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import './MyDay.css'
 
 const MEAL_LABELS = {
@@ -164,14 +166,14 @@ export default function MyDay() {
       </header>
 
       {error && <p className="error">{error}</p>}
-      {loading && <p className="muted">Hämtar din dag…</p>}
+      {loading && <Spinner label="Hämtar din dag…" />}
 
       {!loading && isEmpty && (
-        <div className="card my-day-empty">
-          <span aria-hidden="true">✨</span>
-          <p>Inget planerat för idag.</p>
-          <p className="muted small">Du har en lugn dag framför dig.</p>
-        </div>
+        <EmptyState
+          icon="🌅"
+          title="Inget planerat för idag"
+          description="Du har en lugn dag framför dig."
+        />
       )}
 
       {!loading && !isEmpty && (
@@ -182,7 +184,11 @@ export default function MyDay() {
               <span className="my-day-count">{tasks.length}</span>
             </div>
             {tasks.length === 0 ? (
-              <p className="muted small">Inga öppna listpunkter tilldelade till dig.</p>
+              <EmptyState
+                icon="✅"
+                title="Inga listpunkter"
+                description="Du har inga öppna listpunkter tilldelade till dig."
+              />
             ) : (
               <ul className="list">
                 {tasks.map((item) => {
@@ -210,7 +216,11 @@ export default function MyDay() {
               <span className="my-day-count">{events.length}</span>
             </div>
             {events.length === 0 ? (
-              <p className="muted small">Inga kalenderhändelser idag.</p>
+              <EmptyState
+                icon="📅"
+                title="Inga kalenderhändelser"
+                description="Det finns inga kalenderhändelser idag."
+              />
             ) : (
               <ul className="list">
                 {events.map((event) => (
@@ -234,7 +244,11 @@ export default function MyDay() {
               <span className="my-day-count">{meals.length}</span>
             </div>
             {meals.length === 0 ? (
-              <p className="muted small">Inga måltider planerade idag.</p>
+              <EmptyState
+                icon="🍽️"
+                title="Inga måltider planerade"
+                description="Det finns inga måltider planerade idag."
+              />
             ) : (
               <ul className="list">
                 {meals.map((meal) => (

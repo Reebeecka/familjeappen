@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import { useCollection } from '../lib/useCollection'
 import './RecurringTasks.css'
 
@@ -112,9 +114,13 @@ export default function RecurringTasks() {
       </form>
 
       {error && <p className="error">{error}</p>}
-      {loading && <p className="muted">Laddar…</p>}
+      {loading && <Spinner />}
       {!loading && items.length === 0 && (
-        <p className="muted">Inga återkommande uppgifter än.</p>
+        <EmptyState
+          icon="🔁"
+          title="Inga återkommande uppgifter"
+          description="Lägg till en uppgift som ska upprepas automatiskt."
+        />
       )}
 
       <ul className="list">

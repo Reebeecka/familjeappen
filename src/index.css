@@ -395,6 +395,65 @@ input:focus {
   accent-color: var(--primary);
 }
 
+/* Loading & empty states */
+.loading-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 2rem 1rem;
+  color: var(--muted);
+}
+
+.spinner {
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex: none;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1.25rem;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.empty-icon {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.empty-title {
+  font-weight: 650;
+  color: var(--text);
+  margin: 0;
+}
+
+.empty-desc {
+  font-size: 0.9rem;
+  max-width: 34ch;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}
+
 /* Theme palettes */
 :root {
   color-scheme: light;

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import { useAuth } from '../lib/AuthContext'
 import { useHouseholdMembers } from '../lib/useHouseholdMembers'
 import { isListItemOverdue, sortListItems, useListItems } from '../lib/useListItems'
@@ -375,7 +377,7 @@ export default function ListDetail() {
   if (listLoading) {
     return (
       <div className="page">
-        <p className="muted">Laddar listan…</p>
+        <Spinner />
       </div>
     )
   }
@@ -485,11 +487,17 @@ export default function ListDetail() {
       </form>
 
       {(error || listError) && <p className="error">{error || listError}</p>}
-      {loading && <p className="muted">Laddar poster…</p>}
+      {loading && <Spinner />}
       {!loading && items.length === 0 && (
-        <p className="muted">
-          {isShopping ? 'Inköpslistan är tom.' : 'Det finns inga uppgifter i listan än.'}
-        </p>
+        <EmptyState
+          icon={isShopping ? '🗒️' : '✅'}
+          title={isShopping ? 'Inköpslistan är tom' : 'Inga uppgifter än'}
+          description={
+            isShopping
+              ? 'Lägg till den första varan ovan.'
+              : 'Lägg till den första uppgiften ovan.'
+          }
+        />
       )}
 
       <ul className="list list-detail-list">

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
+import EmptyState from './EmptyState'
+import Spinner from './Spinner'
 import './ActivityFeed.css'
 
 const MAX_ACTIVITIES = 20
@@ -230,11 +232,15 @@ export default function ActivityFeed() {
 
       <div className="card activity-card">
         {householdId && loading && (
-          <p className="muted small activity-message">Laddar aktivitet…</p>
+          <Spinner label="Laddar aktivitet…" />
         )}
         {error && <p className="error activity-message">{error}</p>}
         {(!householdId || !loading) && !error && activities.length === 0 && (
-          <p className="muted activity-message">Ingen aktivitet än.</p>
+          <EmptyState
+            icon="📣"
+            title="Ingen aktivitet än"
+            description="Familjens senaste aktivitet visas här."
+          />
         )}
 
         {activities.length > 0 && (

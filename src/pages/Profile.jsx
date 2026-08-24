@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Spinner from '../components/Spinner'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 import './Profile.css'
@@ -13,7 +14,7 @@ export default function Profile() {
     return (
       <div className="page">
         <h1 className="page-title">Min profil 👤</h1>
-        <p className="muted">Laddar profil…</p>
+        <Spinner />
       </div>
     )
   }

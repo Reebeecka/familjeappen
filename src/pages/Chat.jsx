@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { useHouseholdMembers } from '../lib/useHouseholdMembers'
 import { supabase } from '../lib/supabase'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import './Chat.css'
 
 const MESSAGE_LIMIT = 50
@@ -170,12 +172,16 @@ export default function Chat() {
 
       <section className="card chat-card" aria-label="Familjechatt">
         <div className="chat-messages" aria-live="polite">
-          {loading && <p className="muted chat-status">Laddar meddelanden…</p>}
+          {loading && <Spinner label="Laddar meddelanden…" />}
           {!loading && error && messages.length === 0 && (
             <p className="error chat-status">{error}</p>
           )}
           {!loading && !error && messages.length === 0 && (
-            <p className="muted chat-status">Inga meddelanden än. Skriv det första!</p>
+            <EmptyState
+              icon="💬"
+              title="Inga meddelanden än"
+              description="Skriv det första meddelandet till familjen."
+            />
           )}
 
           {messages.map((message) => {

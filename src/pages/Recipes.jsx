@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 import { useCollection } from '../lib/useCollection'
@@ -464,9 +466,13 @@ export default function Recipes() {
       )}
 
       {error && <p className="error">{error}</p>}
-      {loading && <p className="muted">Laddar…</p>}
+      {loading && <Spinner />}
       {!loading && items.length === 0 && !draftForm && (
-        <p className="muted">Inga recept än. Lägg till ett eller importera från en länk.</p>
+        <EmptyState
+          icon="📖"
+          title="Inga recept"
+          description="Lägg till ett recept eller importera ett från en länk."
+        />
       )}
 
       {!draftForm && (

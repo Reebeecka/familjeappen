@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 import { useCollection } from '../lib/useCollection'
@@ -450,9 +452,13 @@ export default function Budget() {
       {(error || goalsError || settingsError) && (
         <p className="error">{error || goalsError || settingsError}</p>
       )}
-      {(loading || goalsLoading) && <p className="muted">Laddar…</p>}
+      {(loading || goalsLoading) && <Spinner />}
       {!loading && monthlyEntries.length === 0 && (
-        <p className="muted">Inga poster den här månaden.</p>
+        <EmptyState
+          icon="💰"
+          title="Inga budgetposter"
+          description="Det finns inga poster för den här månaden."
+        />
       )}
 
       <ul className="list">

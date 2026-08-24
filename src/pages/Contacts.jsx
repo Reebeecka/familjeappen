@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import { useCollection } from '../lib/useCollection'
 import './Contacts.css'
 
@@ -139,11 +141,17 @@ export default function Contacts() {
       </form>
 
       {error && <p className="error">{error}</p>}
-      {loading && <p className="muted">Laddar…</p>}
+      {loading && <Spinner />}
       {!loading && filtered.length === 0 && (
-        <p className="muted">
-          {debouncedSearch.trim() ? 'Inga kontakter matchar sökningen.' : 'Inga kontakter än.'}
-        </p>
+        <EmptyState
+          icon="📇"
+          title={debouncedSearch.trim() ? 'Inga sökträffar' : 'Inga kontakter'}
+          description={
+            debouncedSearch.trim()
+              ? 'Ingen kontakt matchar din sökning.'
+              : 'Lägg till en kontakt för att komma igång.'
+          }
+        />
       )}
 
       <ul className="list">

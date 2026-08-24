@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import { useCollection } from '../lib/useCollection'
 import './Lists.css'
 
@@ -82,9 +84,13 @@ export default function Lists() {
       </form>
 
       {error && <p className="error">{error}</p>}
-      {loading && <p className="muted">Laddar listor…</p>}
+      {loading && <Spinner />}
       {!loading && lists.length === 0 && (
-        <p className="muted">Inga listor än. Skapa familjens första lista ovan.</p>
+        <EmptyState
+          icon="🗒️"
+          title="Inga listor än"
+          description="Skapa familjens första lista ovan."
+        />
       )}
 
       <div className="lists-grid">

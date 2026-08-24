@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import ActivityFeed from '../components/ActivityFeed'
+import EmptyState from '../components/EmptyState'
 import NotificationButton from '../components/NotificationButton'
+import Spinner from '../components/Spinner'
 import './Home.css'
 
 const QUICK_LINKS = [
@@ -120,10 +122,14 @@ export default function Home() {
           <span aria-hidden="true">☀️</span>
         </div>
 
-        {todayLoading && <p className="muted small today-message">Laddar dagens planer…</p>}
+        {todayLoading && <Spinner />}
         {todayError && <p className="error today-message">{todayError}</p>}
         {!todayLoading && !todayError && todayEvents.length === 0 && todayMeals.length === 0 && (
-          <p className="muted small today-message">Inget planerat idag – njut av dagen.</p>
+          <EmptyState
+            icon="🌤️"
+            title="Inget planerat idag"
+            description="Njut av en lugn dag tillsammans."
+          />
         )}
 
         {!todayLoading && !todayError && (todayEvents.length > 0 || todayMeals.length > 0) && (
@@ -131,7 +137,11 @@ export default function Home() {
             <div>
               <h3 className="today-subheading">Kalender</h3>
               {todayEvents.length === 0 ? (
-                <p className="muted small today-empty">Inga händelser.</p>
+                <EmptyState
+                  icon="📅"
+                  title="Inga händelser"
+                  description="Kalendern är tom för idag."
+                />
               ) : (
                 <ul className="today-list">
                   {todayEvents.map((event) => (
@@ -152,7 +162,11 @@ export default function Home() {
             <div>
               <h3 className="today-subheading">Måltider</h3>
               {todayMeals.length === 0 ? (
-                <p className="muted small today-empty">Inga måltider.</p>
+                <EmptyState
+                  icon="🍽️"
+                  title="Inga måltider"
+                  description="Inga måltider är planerade idag."
+                />
               ) : (
                 <ul className="today-list">
                   {todayMeals.map((meal) => (

@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import { useCollection } from '../lib/useCollection'
 import './Calendar.css'
 
@@ -431,14 +433,24 @@ export default function Calendar() {
             {selectedEvents.length > 0 && <EventItems events={selectedEvents} remove={remove} />}
             {selectedEvents.length === 0 &&
               selectedBirthdays.length === 0 &&
-              !selectedHoliday && <p className="muted">Inget planerat den här dagen.</p>}
+              !selectedHoliday && (
+                <EmptyState
+                  icon="📅"
+                  title="Inget planerat"
+                  description="Det finns inga händelser den här dagen."
+                />
+              )}
           </section>
         </>
       ) : (
         <>
-          {loading && <p className="muted">Laddar…</p>}
+          {loading && <Spinner />}
           {!loading && agendaDayKeys.length === 0 && (
-            <p className="muted">Inga kommande händelser.</p>
+            <EmptyState
+              icon="📅"
+              title="Inga kommande händelser"
+              description="Lägg till en händelse för att börja planera."
+            />
           )}
           {agendaDayKeys.map((dayKey) => (
             <div key={dayKey} className="cal-group">
@@ -450,7 +462,7 @@ export default function Calendar() {
       )}
 
       {view === 'month' && (loading || contactsLoading) && (
-        <p className="muted">Laddar kalendern…</p>
+        <Spinner />
       )}
     </div>
   )

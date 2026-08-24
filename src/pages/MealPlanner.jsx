@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import { useCollection } from '../lib/useCollection'
 import './MealPlanner.css'
 
@@ -57,7 +59,14 @@ export default function MealPlanner() {
       <h1 className="page-title">Måltider 🍽️</h1>
 
       {error && <p className="error">{error}</p>}
-      {loading && <p className="muted">Laddar…</p>}
+      {loading && <Spinner />}
+      {!loading && items.length === 0 && (
+        <EmptyState
+          icon="🍽️"
+          title="Inga måltider planerade"
+          description="Lägg till en måltid i veckoplaneringen nedan."
+        />
+      )}
 
       {days.map((day) => (
         <div key={day.key} className="card meal-day">

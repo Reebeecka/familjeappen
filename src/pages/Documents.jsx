@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import EmptyState from '../components/EmptyState'
+import Spinner from '../components/Spinner'
 import './Documents.css'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
@@ -264,12 +266,18 @@ export default function Documents() {
             hidden
           />
         </label>
-        {uploading && <p className="muted small">Laddar upp filen, vänta…</p>}
+        {uploading && <Spinner />}
       </div>
 
       {error && <p className="error">{error}</p>}
-      {loading && <p className="muted">Laddar…</p>}
-      {!loading && items.length === 0 && <p className="muted">Inga dokument ännu.</p>}
+      {loading && <Spinner />}
+      {!loading && items.length === 0 && (
+        <EmptyState
+          icon="📁"
+          title="Inga dokument"
+          description="Ladda upp ett dokument för att komma igång."
+        />
+      )}
 
       {!loading && items.length > 0 && (
         <>
@@ -288,7 +296,13 @@ export default function Documents() {
             </select>
           </label>
 
-          {filteredItems.length === 0 && <p className="muted">Inga dokument i den mappen.</p>}
+          {filteredItems.length === 0 && (
+            <EmptyState
+              icon="📁"
+              title="Mappen är tom"
+              description="Det finns inga dokument i den valda mappen."
+            />
+          )}
 
           <div className="doc-groups">
             {Object.entries(groupedItems).map(([folderName, documents]) => (
