@@ -4,6 +4,14 @@ import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
+import {
+  convertAmount,
+  fetchEurSekRate,
+  formatEurSekRate,
+  formatRateDate,
+  useEurSekRate,
+  useEurSekRates,
+} from '../lib/exchangeRate'
 import { useCollection } from '../lib/useCollection'
 import './Budget.css'
 
@@ -44,10 +52,9 @@ const moveMonth = (month, difference) => {
 
 const entryMonth = (entry) => entry.entry_date.slice(0, 7)
 
-const convertAmount = (amount, currency, baseCurrency, eurSekRate) => {
-  const value = Number(amount) || 0
-  if (currency === baseCurrency) return value
-  return currency === 'EUR' ? value * eurSekRate : value / eurSekRate
+function rateForEntry(entry, fetchedRates) {
+  if (entry.eur_sek_rate != null) return Number(entry.eur_sek_rate)
+  return fetchedRates[entry.entry_date]?.rate ?? null
 }
 
 export default function Budget() {
@@ -68,7 +75,6 @@ export default function Budget() {
   const [currency, setCurrency] = useState('SEK')
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
   const [baseCurrency, setBaseCurrency] = useState('SEK')
-  const [eurSekRate, setEurSekRate] = useState('11.5')
   const [goalAmount, setGoalAmount] = useState('')
   const [entrySubmitting, setEntrySubmitting] = useState(false)
   const [entryError, setEntryError] = useState('')
@@ -85,7 +91,7 @@ export default function Budget() {
     const loadSettings = async () => {
       const { data, error: fetchError } = await supabase
         .from('budget_settings')
-        .select('base_currency, eur_sek_rate')
+        .select('base_currency')
         .eq('household_id', householdId)
         .maybeSingle()
 
@@ -94,7 +100,6 @@ export default function Budget() {
         setSettingsError(fetchError.message)
       } else if (data) {
         setBaseCurrency(data.base_currency)
-        setEurSekRate(String(data.eur_sek_rate))
       }
       setSettingsLoading(false)
     }
@@ -113,7 +118,6 @@ export default function Budget() {
         (payload) => {
           if (payload.eventType === 'DELETE') return
           setBaseCurrency(payload.new.base_currency)
-          setEurSekRate(String(payload.new.eur_sek_rate))
         },
       )
       .subscribe()
@@ -124,8 +128,16 @@ export default function Budget() {
     }
   }, [householdId])
 
-  const rate = Number.parseFloat(String(eurSekRate).replace(',', '.'))
-  const validRate = Number.isFinite(rate) && rate > 0
+  const needsConversion = currency !== baseCurrency
+  const previewRate = useEurSekRate(entryDate, needsConversion)
+  const missingRateDates = useMemo(
+    () =>
+      items
+        .filter((entry) => (entry.currency || 'SEK') !== baseCurrency && entry.eur_sek_rate == null)
+        .map((entry) => entry.entry_date),
+    [items, baseCurrency],
+  )
+  const fetchedRates = useEurSekRates(missingRateDates)
 
   const monthlyEntries = useMemo(
     () =>
@@ -147,13 +159,14 @@ export default function Budget() {
         entry.amount,
         entry.currency || 'SEK',
         baseCurrency,
-        validRate ? rate : 11.5,
+        rateForEntry(entry, fetchedRates),
       )
+      if (value == null) continue
       if (entry.kind === 'inkomst') inc += value
       else exp += value
     }
     return { income: inc, expense: exp, balance: inc - exp }
-  }, [monthlyEntries, baseCurrency, rate, validRate])
+  }, [monthlyEntries, baseCurrency, fetchedRates])
 
   const selectedGoal = useMemo(
     () => goals.find((goal) => goal.month === selectedMonth),
@@ -175,14 +188,15 @@ export default function Budget() {
           entry.amount,
           entry.currency || 'SEK',
           baseCurrency,
-          validRate ? rate : 11.5,
+          rateForEntry(entry, fetchedRates),
         )
+        if (value == null) continue
         if (entry.kind === 'inkomst') monthIncome += value
         else monthExpense += value
       }
       return { month, income: monthIncome, expense: monthExpense }
     })
-  }, [items, selectedMonth, baseCurrency, rate, validRate])
+  }, [items, selectedMonth, baseCurrency, fetchedRates])
 
   const chartMaximum = Math.max(
     1,
@@ -202,14 +216,27 @@ export default function Budget() {
     }
     setEntrySubmitting(true)
     setEntryError('')
-    const wasAdded = await add({
+    const fields = {
       kind,
       category: category.trim() || null,
       amount: value,
       note: note.trim() || null,
       entry_date: entryDate || today(),
       currency,
-    })
+    }
+
+    if (currency !== baseCurrency) {
+      try {
+        const { rate } = await fetchEurSekRate(entryDate || today())
+        fields.eur_sek_rate = rate
+      } catch {
+        setEntryError('Växelkursen för det datumet kunde inte hämtas. Kontrollera nätet och försök igen.')
+        setEntrySubmitting(false)
+        return
+      }
+    }
+
+    const wasAdded = await add(fields)
     if (wasAdded) {
       setCategory('')
       setAmount('')
@@ -224,17 +251,12 @@ export default function Budget() {
   const handleSaveSettings = async (event) => {
     event.preventDefault()
     if (settingsSaving) return
-    if (!validRate) {
-      setSettingsError('Ange en giltig växelkurs större än noll.')
-      return
-    }
 
     setSettingsSaving(true)
     setSettingsError(null)
     const { error: saveError } = await supabase.from('budget_settings').upsert({
       household_id: householdId,
       base_currency: baseCurrency,
-      eur_sek_rate: rate,
       updated_by: user?.id,
       updated_at: new Date().toISOString(),
     })
@@ -440,7 +462,26 @@ export default function Budget() {
           Datum
           <input type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} />
         </label>
-        <button type="submit" className="btn primary" disabled={entrySubmitting}>
+        {needsConversion && (
+          <p className="muted small budget-rate-hint">
+            {previewRate.loading && 'Hämtar dagens växelkurs…'}
+            {previewRate.error && previewRate.error}
+            {!previewRate.loading && !previewRate.error && previewRate.rate && (
+              <>
+                Automatisk kurs {formatRateDate(previewRate.rateDate)}: 1 EUR ={' '}
+                {formatEurSekRate(previewRate.rate)} SEK
+                {previewRate.rateDate !== entryDate
+                  ? ' (närmaste bankdag – helger har ingen egen kurs)'
+                  : ''}
+              </>
+            )}
+          </p>
+        )}
+        <button
+          type="submit"
+          className="btn primary"
+          disabled={entrySubmitting || (needsConversion && !previewRate.rate)}
+        >
           {entrySubmitting ? 'Sparar…' : 'Lägg till'}
         </button>
         {entryError && <p className="error">{entryError}</p>}
@@ -448,7 +489,7 @@ export default function Budget() {
 
       <details className="card budget-settings">
         <summary>Valutainställningar</summary>
-        <form className="form" onSubmit={handleSaveSettings} noValidate>
+        <form className="form" onSubmit={handleSaveSettings}>
           <label>
             Huvudvaluta
             <select
@@ -460,18 +501,10 @@ export default function Budget() {
               <option value="EUR">EUR</option>
             </select>
           </label>
-          <label>
-            Växelkurs (1 EUR i SEK)
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.0001"
-              min="0.0001"
-              value={eurSekRate}
-              onChange={(event) => setEurSekRate(event.target.value)}
-              disabled={settingsLoading}
-            />
-          </label>
+          <p className="muted small">
+            EUR räknas om automatiskt med ECB:s dagskurs för postens datum. Helger och röda dagar
+            använder närmaste bankdag.
+          </p>
           <button type="submit" className="btn secondary" disabled={settingsSaving}>
             {settingsSaving ? 'Sparar…' : 'Spara inställningar'}
           </button>
@@ -493,11 +526,12 @@ export default function Budget() {
       <ul className="list">
         {monthlyEntries.map((entry) => {
           const entryCurrency = entry.currency || 'SEK'
+          const entryRate = rateForEntry(entry, fetchedRates)
           const convertedAmount = convertAmount(
             entry.amount,
             entryCurrency,
             baseCurrency,
-            validRate ? rate : 11.5,
+            entryRate,
           )
           return (
             <li key={entry.id} className="list-item budget-item">
@@ -514,7 +548,7 @@ export default function Budget() {
                   }
                 >
                   {entry.kind === 'inkomst' ? '+' : '−'}
-                  {formatAmount(convertedAmount, baseCurrency)}
+                  {formatAmount(convertedAmount ?? entry.amount, convertedAmount == null ? entryCurrency : baseCurrency)}
                 </span>
                 <button
                   type="button"
@@ -530,6 +564,9 @@ export default function Budget() {
               {entryCurrency !== baseCurrency && (
                 <span className="muted small budget-original-amount">
                   Ursprungligt belopp: {formatAmount(entry.amount, entryCurrency)}
+                  {entryRate
+                    ? ` · 1 EUR = ${formatEurSekRate(entryRate)} SEK`
+                    : ''}
                 </span>
               )}
               {entry.note && <span className="muted small">{entry.note}</span>}
