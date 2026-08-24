@@ -42,13 +42,14 @@ export default function Lists() {
     if (!trimmedName || submitting) return
 
     setSubmitting(true)
-    await add({
+    const wasAdded = await add({
       name: trimmedName,
       type,
       icon: TYPE_OPTIONS[type].icon,
     })
-    setName('')
     setSubmitting(false)
+
+    if (wasAdded) setName('')
   }
 
   const loading = listsLoading || itemsLoading
@@ -58,7 +59,7 @@ export default function Lists() {
     <div className="page">
       <h1 className="page-title">Listor 📋</h1>
 
-      <form onSubmit={handleAdd} className="form card lists-form">
+      <form onSubmit={handleAdd} className="form card lists-form" aria-busy={submitting}>
         <label>
           Listnamn
           <input
@@ -106,8 +107,9 @@ export default function Lists() {
                 </span>
                 <span className="lists-card-content">
                   <span className="lists-card-name">{list.name}</span>
-                  <span className="muted small">
-                    {remaining === 1 ? '1 punkt kvar' : `${remaining} punkter kvar`}
+                  <span className={`lists-remaining ${remaining === 0 ? 'is-complete' : ''}`}>
+                    <strong>{remaining}</strong>
+                    <span>{remaining === 1 ? 'punkt kvar' : 'punkter kvar'}</span>
                   </span>
                 </span>
               </Link>

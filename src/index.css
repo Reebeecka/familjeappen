@@ -75,6 +75,11 @@ code {
   box-shadow: var(--shadow);
   border: 1px solid rgba(228, 221, 211, 0.72);
   padding: 1.5rem;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 /* Auth */
@@ -110,6 +115,12 @@ code {
   cursor: pointer;
   font-size: 0.95rem;
   color: var(--text);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .tab.active {
@@ -141,6 +152,11 @@ input[type='password'] {
   font-size: 1rem;
   color: var(--text);
   background: var(--surface);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 input:focus {
@@ -160,6 +176,8 @@ input:focus {
   transition:
     background-color 160ms ease,
     color 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease,
     transform 160ms ease;
 }
 
@@ -177,6 +195,10 @@ input:focus {
   color: #fff;
 }
 
+.btn.secondary:hover {
+  filter: brightness(0.94);
+}
+
 .btn.ghost {
   background: transparent;
   color: var(--muted);
@@ -188,6 +210,18 @@ input:focus {
   background: transparent;
   padding: 0.3rem 0.5rem;
   font-size: 1.1rem;
+  border-radius: 50%;
+}
+
+.btn.ghost:hover,
+.btn.icon:hover {
+  background: var(--soft-accent);
+  color: var(--text);
+}
+
+.btn:not(:disabled):active {
+  filter: brightness(0.9);
+  transform: translateY(1px);
 }
 
 .btn:disabled {
@@ -264,6 +298,11 @@ input:focus {
   text-decoration: none;
   color: var(--muted);
   font-size: 0.75rem;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .nav-item.active {
@@ -288,6 +327,15 @@ input:focus {
   gap: 0.4rem;
   text-decoration: none;
   color: var(--text);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.dash-card:active {
+  transform: translateY(1px);
 }
 
 .dash-icon {
@@ -372,6 +420,15 @@ input:focus {
   border-radius: 14px;
   padding: 0.85rem 1rem;
   box-shadow: var(--shadow);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.list-item:active {
+  transform: translateY(1px);
 }
 
 .list-item.done .check-label span {
@@ -448,9 +505,41 @@ input:focus {
   margin: 0;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .dash-card:hover,
+  .list-item:hover {
+    box-shadow: 0 7px 22px var(--focus-ring);
+    transform: translateY(-1px);
+  }
+}
+
+.btn:focus-visible,
+.dash-card:focus-visible,
+.nav-item:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .btn,
+  .card,
+  .dash-card,
+  .list-item,
+  .nav-item,
+  .tab,
+  input {
+    transition: none;
+  }
+
+  .btn,
+  .dash-card,
+  .list-item {
+    transform: none !important;
+  }
+
   .spinner {
-    animation-duration: 2.4s;
+    animation: none;
   }
 }
 

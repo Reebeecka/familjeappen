@@ -29,6 +29,8 @@ function formatDayHeading(date) {
 export default function MealPlanner() {
   const { items, loading, error, add, remove } = useCollection('meals', 'meal_date')
   const [drafts, setDrafts] = useState({})
+  const [submittingKey, setSubmittingKey] = useState(null)
+  const [formErrors, setFormErrors] = useState({})
 
   const today = new Date()
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -41,11 +43,25 @@ export default function MealPlanner() {
   }
 
   const handleAdd = async (dateKey, mealType) => {
+    if (submittingKey) return
     const fieldKey = `${dateKey}-${mealType}`
     const trimmed = (drafts[fieldKey] ?? '').trim()
-    if (!trimmed) return
-    setDraft(fieldKey, '')
-    await add({ meal_date: dateKey, meal_type: mealType, title: trimmed })
+    if (!trimmed) {
+      setFormErrors((current) => ({ ...current, [fieldKey]: 'Ange en måltid.' }))
+      return
+    }
+    setSubmittingKey(fieldKey)
+    setFormErrors((current) => ({ ...current, [fieldKey]: '' }))
+    const wasAdded = await add({ meal_date: dateKey, meal_type: mealType, title: trimmed })
+    if (wasAdded) {
+      setDraft(fieldKey, '')
+    } else {
+      setFormErrors((current) => ({
+        ...current,
+        [fieldKey]: 'Måltiden kunde inte sparas. Försök igen.',
+      }))
+    }
+    setSubmittingKey(null)
   }
 
   const handleRemove = (meal) => {
@@ -112,10 +128,12 @@ export default function MealPlanner() {
                     type="submit"
                     className="btn primary"
                     aria-label={`Lägg till ${type.label.toLowerCase()} för ${day.heading}`}
+                    disabled={Boolean(submittingKey)}
                   >
-                    +
+                    {submittingKey === fieldKey ? 'Sparar…' : '+'}
                   </button>
                 </form>
+                {formErrors[fieldKey] && <p className="error">{formErrors[fieldKey]}</p>}
               </div>
             )
           })}

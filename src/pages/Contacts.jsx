@@ -27,6 +27,10 @@ export default function Contacts() {
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState(emptyForm)
+  const [addSubmitting, setAddSubmitting] = useState(false)
+  const [addError, setAddError] = useState('')
+  const [editSubmitting, setEditSubmitting] = useState(false)
+  const [editError, setEditError] = useState('')
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 250)
@@ -42,14 +46,23 @@ export default function Contacts() {
 
   const handleAdd = async (event) => {
     event.preventDefault()
+    if (addSubmitting) return
     const fields = cleanForm(form)
-    if (!fields.name) return
-    await add(fields)
-    setForm(emptyForm)
+    if (!fields.name) {
+      setAddError('Ange ett namn för kontakten.')
+      return
+    }
+    setAddSubmitting(true)
+    setAddError('')
+    const wasAdded = await add(fields)
+    if (wasAdded) setForm(emptyForm)
+    else setAddError('Kontakten kunde inte sparas. Försök igen.')
+    setAddSubmitting(false)
   }
 
   const startEdit = (contact) => {
     setEditingId(contact.id)
+    setEditError('')
     setEditForm({
       name: contact.name ?? '',
       phone: contact.phone ?? '',
@@ -62,10 +75,18 @@ export default function Contacts() {
 
   const handleSaveEdit = async (event) => {
     event.preventDefault()
+    if (editSubmitting) return
     const fields = cleanForm(editForm)
-    if (!fields.name) return
-    await update(editingId, fields)
-    setEditingId(null)
+    if (!fields.name) {
+      setEditError('Ange ett namn för kontakten.')
+      return
+    }
+    setEditSubmitting(true)
+    setEditError('')
+    const wasUpdated = await update(editingId, fields)
+    if (wasUpdated) setEditingId(null)
+    else setEditError('Kontakten kunde inte sparas. Försök igen.')
+    setEditSubmitting(false)
   }
 
   return (
@@ -135,9 +156,10 @@ export default function Contacts() {
             placeholder="Valfri notis…"
           />
         </label>
-        <button type="submit" className="btn primary">
-          Lägg till
+        <button type="submit" className="btn primary" disabled={addSubmitting}>
+          {addSubmitting ? 'Sparar…' : 'Lägg till'}
         </button>
+        {addError && <p className="error">{addError}</p>}
       </form>
 
       {error && <p className="error">{error}</p>}
@@ -208,13 +230,19 @@ export default function Contacts() {
                   />
                 </label>
                 <div className="add-row">
-                  <button type="submit" className="btn primary">
-                    Spara
+                  <button type="submit" className="btn primary" disabled={editSubmitting}>
+                    {editSubmitting ? 'Sparar…' : 'Spara'}
                   </button>
-                  <button type="button" className="btn ghost" onClick={() => setEditingId(null)}>
+                  <button
+                    type="button"
+                    className="btn ghost"
+                    onClick={() => setEditingId(null)}
+                    disabled={editSubmitting}
+                  >
                     Avbryt
                   </button>
                 </div>
+                {editError && <p className="error">{editError}</p>}
               </form>
             </li>
           ) : (

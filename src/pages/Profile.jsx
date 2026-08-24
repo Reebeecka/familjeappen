@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Spinner from '../components/Spinner'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -29,9 +29,12 @@ function ProfileForm({ user, profile }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [confirmation, setConfirmation] = useState('')
+  const savingRef = useRef(false)
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (savingRef.current) return
+
     const trimmedName = displayName.trim()
     const trimmedAvatar = avatar.trim()
 
@@ -48,32 +51,39 @@ function ProfileForm({ user, profile }) {
       return
     }
 
+    savingRef.current = true
     setSaving(true)
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        display_name: trimmedName,
-        color,
-        avatar: trimmedAvatar,
-      })
-      .eq('id', user.id)
-    setSaving(false)
+    try {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          display_name: trimmedName,
+          color,
+          avatar: trimmedAvatar,
+        })
+        .eq('id', user.id)
 
-    if (updateError) {
-      setError(`Profilen kunde inte sparas: ${updateError.message}`)
-      return
+      if (updateError) {
+        setError('Profilen kunde inte sparas. Försök igen.')
+        return
+      }
+
+      setDisplayName(trimmedName)
+      setAvatar(trimmedAvatar)
+      setConfirmation('Sparat')
+    } catch {
+      setError('Profilen kunde inte sparas. Försök igen.')
+    } finally {
+      savingRef.current = false
+      setSaving(false)
     }
-
-    setDisplayName(trimmedName)
-    setAvatar(trimmedAvatar)
-    setConfirmation('Profilen är sparad.')
   }
 
   return (
     <div className="page">
       <h1 className="page-title">Min profil 👤</h1>
 
-      <form className="card form profile-form" onSubmit={handleSubmit}>
+      <form className="card form profile-form" onSubmit={handleSubmit} aria-busy={saving}>
         <div className="profile-preview" style={{ '--profile-color': color }}>
           <span className="profile-avatar" aria-hidden="true">
             {avatar || '👤'}

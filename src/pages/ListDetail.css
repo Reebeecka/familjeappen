@@ -60,6 +60,10 @@
   border-left: 4px solid var(--secondary);
 }
 
+.list-detail-item.done {
+  opacity: 0.68;
+}
+
 .list-detail-item-content {
   display: flex;
   min-width: 0;
@@ -86,8 +90,8 @@
   gap: 0.3rem;
   width: fit-content;
   border-radius: 999px;
-  background: rgba(169, 87, 67, 0.12);
-  color: var(--secondary);
+  border: 1px solid currentColor;
+  background: var(--surface);
   padding: 0.15rem 0.5rem;
   font-size: 0.78rem;
   font-weight: 700;
@@ -101,13 +105,73 @@
   content: '';
 }
 
+.list-detail-priority-badge.priority-hög {
+  color: var(--secondary);
+}
+
+.list-detail-priority-badge.priority-normal {
+  color: var(--primary);
+}
+
+.list-detail-priority-badge.priority-låg {
+  color: var(--muted);
+}
+
 .list-detail-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
   font-size: 0.82rem;
 }
 
 .list-detail-due.overdue {
   color: var(--danger);
   font-weight: 700;
+}
+
+.list-detail-progress-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 0.15rem 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.list-detail-progress-track {
+  width: 2.8rem;
+  height: 0.35rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.list-detail-progress-value {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width 160ms ease;
+}
+
+.list-detail-shopping-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.list-detail-meta-chip {
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--soft-accent);
+  color: var(--muted);
+  padding: 0.15rem 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .list-detail-item .check-label {
@@ -171,12 +235,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  margin: 0.55rem 0 0 1.1rem;
-  padding: 0 0 0 0.75rem;
-  border-left: 2px solid var(--border);
+  margin: 0.55rem 0 0 1.35rem;
+  padding: 0 0 0 0.9rem;
+  border-left: 3px solid var(--border);
 }
 
 .list-detail-item.subtask {
+  background: var(--surface-translucent);
   box-shadow: none;
 }
 
@@ -199,7 +264,7 @@
   }
 
   .list-detail-subtasks {
-    margin-left: 0.45rem;
-    padding-left: 0.5rem;
+    margin-left: 0.55rem;
+    padding-left: 0.65rem;
   }
 }

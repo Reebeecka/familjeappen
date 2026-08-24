@@ -38,6 +38,15 @@ function formatEventTime(event) {
   })
 }
 
+function getGreeting() {
+  const hour = new Date().getHours()
+
+  if (hour < 5) return 'God kväll'
+  if (hour < 10) return 'God morgon'
+  if (hour < 18) return 'God dag'
+  return 'God kväll'
+}
+
 export default function Home() {
   const { profile, householdId } = useAuth()
   const [household, setHousehold] = useState(null)
@@ -98,6 +107,8 @@ export default function Home() {
     }
   }, [householdId])
 
+  const displayName = profile?.display_name || 'där'
+
   return (
     <div className="page home-page">
       <header className="home-greeting">
@@ -108,40 +119,48 @@ export default function Home() {
         >
           {profile?.avatar || '👋'}
         </span>
-        <div>
-          <p className="muted small home-eyebrow">Välkommen hem</p>
-          <h1 className="page-title">Hej {profile?.display_name || 'där'}!</h1>
+        <div className="home-greeting-copy">
+          <p className="muted small home-eyebrow">Välkommen till familjens samlingsplats</p>
+          <h1 className="page-title">
+            {getGreeting()}, {displayName}!
+          </h1>
         </div>
       </header>
 
       <section className="card today-card" aria-labelledby="today-heading">
         <div className="section-heading-row">
-          <h2 id="today-heading" className="home-section-heading">
-            Idag
-          </h2>
-          <span aria-hidden="true">☀️</span>
+          <div>
+            <p className="muted small home-section-eyebrow">Din dag i korthet</p>
+            <h2 id="today-heading" className="home-section-heading">
+              Idag
+            </h2>
+          </div>
+          <span className="today-heading-icon" aria-hidden="true">
+            ☀️
+          </span>
         </div>
 
-        {todayLoading && <Spinner />}
+        {todayLoading && <Spinner label="Laddar dagens planer…" />}
         {todayError && <p className="error today-message">{todayError}</p>}
         {!todayLoading && !todayError && todayEvents.length === 0 && todayMeals.length === 0 && (
-          <EmptyState
-            icon="🌤️"
-            title="Inget planerat idag"
-            description="Njut av en lugn dag tillsammans."
-          />
+          <div className="today-empty-state">
+            <EmptyState
+              icon="🌤️"
+              title="Inget planerat idag"
+              description="Njut av en lugn dag tillsammans."
+            />
+          </div>
         )}
 
         {!todayLoading && !todayError && (todayEvents.length > 0 || todayMeals.length > 0) && (
           <div className="today-columns">
-            <div>
-              <h3 className="today-subheading">Kalender</h3>
+            <div className="today-group">
+              <h3 className="today-subheading">
+                <span aria-hidden="true">📅</span>
+                Kalender
+              </h3>
               {todayEvents.length === 0 ? (
-                <EmptyState
-                  icon="📅"
-                  title="Inga händelser"
-                  description="Kalendern är tom för idag."
-                />
+                <p className="muted small today-placeholder">Inga händelser idag.</p>
               ) : (
                 <ul className="today-list">
                   {todayEvents.map((event) => (
@@ -151,30 +170,34 @@ export default function Home() {
                         style={{ '--event-color': event.color || 'var(--primary)' }}
                         aria-hidden="true"
                       />
-                      <span>
-                        <strong>{formatEventTime(event)}</strong> {event.title}
+                      <span className="today-item-copy">
+                        <span className="today-event-time">{formatEventTime(event)}</span>
+                        <strong className="today-item-title">{event.title}</strong>
                       </span>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
-            <div>
-              <h3 className="today-subheading">Måltider</h3>
+            <div className="today-group">
+              <h3 className="today-subheading">
+                <span aria-hidden="true">🍽️</span>
+                Måltider
+              </h3>
               {todayMeals.length === 0 ? (
-                <EmptyState
-                  icon="🍽️"
-                  title="Inga måltider"
-                  description="Inga måltider är planerade idag."
-                />
+                <p className="muted small today-placeholder">Inga måltider planerade.</p>
               ) : (
                 <ul className="today-list">
                   {todayMeals.map((meal) => (
                     <li key={meal.id}>
-                      <span aria-hidden="true">🍴</span>
-                      <span>
-                        <strong>{MEAL_LABELS[meal.meal_type] || meal.meal_type}:</strong>{' '}
-                        {meal.title}
+                      <span className="today-meal-icon" aria-hidden="true">
+                        🍴
+                      </span>
+                      <span className="today-item-copy">
+                        <span className="today-event-time">
+                          {MEAL_LABELS[meal.meal_type] || meal.meal_type}
+                        </span>
+                        <strong className="today-item-title">{meal.title}</strong>
                       </span>
                     </li>
                   ))}
@@ -185,16 +208,21 @@ export default function Home() {
         )}
       </section>
 
-      <ActivityFeed />
+      <div className="home-wall">
+        <ActivityFeed />
+      </div>
 
-      <section aria-labelledby="quick-links-heading">
-        <h2 id="quick-links-heading" className="home-section-heading">
-          Snabblänkar
-        </h2>
+      <section className="home-links-section" aria-labelledby="quick-links-heading">
+        <div className="home-section-header">
+          <h2 id="quick-links-heading" className="home-section-heading">
+            Snabblänkar
+          </h2>
+          <span className="muted small">Allt på ett tryck</span>
+        </div>
         <div className="dashboard-grid home-links">
           {QUICK_LINKS.map((item) => (
             <Link to={item.to} className="card dash-card home-link" key={item.to}>
-              <span className="dash-icon" aria-hidden="true">
+              <span className="dash-icon home-link-icon" aria-hidden="true">
                 {item.icon}
               </span>
               <span className="dash-label">{item.label}</span>
@@ -204,8 +232,6 @@ export default function Home() {
       </section>
 
       <section className="home-utilities" aria-label="Hushåll och notiser">
-        <NotificationButton />
-
         {household && (
           <div className="card invite-card compact-invite-card">
             <div>
@@ -215,6 +241,10 @@ export default function Home() {
             <p className="invite-code compact-invite-code">{household.invite_code}</p>
           </div>
         )}
+
+        <div className="home-notifications">
+          <NotificationButton />
+        </div>
       </section>
     </div>
   )

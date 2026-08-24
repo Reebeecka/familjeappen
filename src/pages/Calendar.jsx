@@ -146,6 +146,8 @@ export default function Calendar() {
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState(CATEGORY_OPTIONS[0].name)
   const [color, setColor] = useState(CATEGORY_OPTIONS[0].color)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [view, setView] = useState('month')
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -225,10 +227,20 @@ export default function Calendar() {
 
   const handleAdd = async (event) => {
     event.preventDefault()
+    if (submitting) return
     const trimmed = title.trim()
-    if (!trimmed || !date) return
+    if (!trimmed) {
+      setSubmitError('Ange en titel för händelsen.')
+      return
+    }
+    if (!date) {
+      setSubmitError('Välj ett datum för händelsen.')
+      return
+    }
     const isAllDay = allDay || !time
     const startAt = isAllDay ? `${date}T00:00:00` : `${date}T${time}:00`
+    setSubmitting(true)
+    setSubmitError('')
     const wasAdded = await add({
       title: trimmed,
       description: description.trim() || null,
@@ -237,12 +249,15 @@ export default function Calendar() {
       category,
       color,
     })
-    if (!wasAdded) return
-
-    setTitle('')
-    setTime('')
-    setAllDay(false)
-    setDescription('')
+    if (wasAdded) {
+      setTitle('')
+      setTime('')
+      setAllDay(false)
+      setDescription('')
+    } else {
+      setSubmitError('Händelsen kunde inte sparas. Försök igen.')
+    }
+    setSubmitting(false)
   }
 
   const handleCategoryChange = (event) => {
@@ -325,9 +340,10 @@ export default function Calendar() {
             placeholder="Detaljer…"
           />
         </label>
-        <button type="submit" className="btn primary">
-          Lägg till
+        <button type="submit" className="btn primary" disabled={submitting}>
+          {submitting ? 'Sparar…' : 'Lägg till'}
         </button>
+        {submitError && <p className="error">{submitError}</p>}
       </form>
 
       {(error || contactsError) && <p className="error">{error || contactsError}</p>}

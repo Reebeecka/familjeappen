@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import EmptyState from '../components/EmptyState'
 import NotificationButton from '../components/NotificationButton'
 import Spinner from '../components/Spinner'
@@ -68,6 +68,18 @@ export default function Settings() {
   const [householdLoading, setHouseholdLoading] = useState(true)
   const [householdError, setHouseholdError] = useState('')
   const [theme, setTheme] = useState(getSavedTheme)
+  const [themeSaving, setThemeSaving] = useState(false)
+  const [themeError, setThemeError] = useState('')
+  const [saveStatus, setSaveStatus] = useState({ section: null, state: '' })
+  const savingOperationRef = useRef(false)
+  const statusTimerRef = useRef(null)
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(statusTimerRef.current)
+    },
+    [],
+  )
 
   useEffect(() => {
     if (!user) return
@@ -133,36 +145,74 @@ export default function Settings() {
     }
   }, [householdId])
 
+  const showSavedStatus = (section) => {
+    window.clearTimeout(statusTimerRef.current)
+    setSaveStatus({ section, state: 'saved' })
+    statusTimerRef.current = window.setTimeout(() => {
+      setSaveStatus({ section: null, state: '' })
+    }, 2000)
+  }
+
   const handlePreferenceChange = async (key) => {
-    if (!user || !householdId || savingPreference) return
+    if (!user || !householdId || savingOperationRef.current) return
 
     const updatedPrefs = {
       ...notificationPrefs,
       [key]: !notificationPrefs[key],
     }
 
+    savingOperationRef.current = true
+    window.clearTimeout(statusTimerRef.current)
     setSavingPreference(key)
     setPrefsError('')
+    setSaveStatus({ section: 'notifications', state: 'saving' })
 
-    const { error } = await supabase.from('notification_prefs').upsert({
-      user_id: user.id,
-      household_id: householdId,
-      ...updatedPrefs,
-      updated_at: new Date().toISOString(),
-    })
+    try {
+      const { error } = await supabase.from('notification_prefs').upsert({
+        user_id: user.id,
+        household_id: householdId,
+        ...updatedPrefs,
+        updated_at: new Date().toISOString(),
+      })
 
-    if (error) {
+      if (error) {
+        setSaveStatus({ section: null, state: '' })
+        setPrefsError('Inställningen kunde inte sparas. Försök igen.')
+      } else {
+        setNotificationPrefs(updatedPrefs)
+        showSavedStatus('notifications')
+      }
+    } catch {
+      setSaveStatus({ section: null, state: '' })
       setPrefsError('Inställningen kunde inte sparas. Försök igen.')
-    } else {
-      setNotificationPrefs(updatedPrefs)
+    } finally {
+      savingOperationRef.current = false
+      setSavingPreference(null)
     }
-    setSavingPreference(null)
   }
 
-  const handleThemeChange = (nextTheme) => {
-    localStorage.setItem('theme', nextTheme)
-    applyTheme(nextTheme)
-    setTheme(nextTheme)
+  const handleThemeChange = async (nextTheme) => {
+    if (nextTheme === theme || savingOperationRef.current) return
+
+    savingOperationRef.current = true
+    window.clearTimeout(statusTimerRef.current)
+    setThemeSaving(true)
+    setThemeError('')
+    setSaveStatus({ section: 'theme', state: 'saving' })
+
+    try {
+      await new Promise((resolve) => window.requestAnimationFrame(resolve))
+      localStorage.setItem('theme', nextTheme)
+      applyTheme(nextTheme)
+      setTheme(nextTheme)
+      showSavedStatus('theme')
+    } catch {
+      setSaveStatus({ section: null, state: '' })
+      setThemeError('Temat kunde inte sparas. Försök igen.')
+    } finally {
+      savingOperationRef.current = false
+      setThemeSaving(false)
+    }
   }
 
   return (
@@ -193,7 +243,7 @@ export default function Settings() {
                     type="checkbox"
                     checked={notificationPrefs[option.key]}
                     onChange={() => handlePreferenceChange(option.key)}
-                    disabled={Boolean(savingPreference) || !householdId}
+                    disabled={Boolean(savingPreference) || themeSaving || !householdId}
                   />
                   <span className="switch-track" aria-hidden="true">
                     <span className="switch-thumb" />
@@ -205,6 +255,11 @@ export default function Settings() {
           {prefsError && (
             <p className="error settings-message" role="alert">
               {prefsError}
+            </p>
+          )}
+          {saveStatus.section === 'notifications' && (
+            <p className="info settings-message" role="status">
+              {saveStatus.state === 'saving' ? 'Sparar…' : 'Sparat'}
             </p>
           )}
         </div>
@@ -280,11 +335,22 @@ export default function Settings() {
                 className={theme === option.value ? 'theme-option active' : 'theme-option'}
                 onClick={() => handleThemeChange(option.value)}
                 aria-pressed={theme === option.value}
+                disabled={themeSaving || Boolean(savingPreference)}
               >
                 {option.label}
               </button>
             ))}
           </div>
+          {themeError && (
+            <p className="error settings-message" role="alert">
+              {themeError}
+            </p>
+          )}
+          {saveStatus.section === 'theme' && (
+            <p className="info settings-message" role="status">
+              {saveStatus.state === 'saving' ? 'Sparar…' : 'Sparat'}
+            </p>
+          )}
         </div>
       </section>
     </div>

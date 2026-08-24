@@ -69,6 +69,10 @@ export default function Budget() {
   const [baseCurrency, setBaseCurrency] = useState('SEK')
   const [eurSekRate, setEurSekRate] = useState('11.5')
   const [goalAmount, setGoalAmount] = useState('')
+  const [entrySubmitting, setEntrySubmitting] = useState(false)
+  const [entryError, setEntryError] = useState('')
+  const [goalSubmitting, setGoalSubmitting] = useState(false)
+  const [goalError, setGoalError] = useState('')
   const [settingsLoading, setSettingsLoading] = useState(true)
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsError, setSettingsError] = useState(null)
@@ -189,8 +193,14 @@ export default function Budget() {
 
   const handleAdd = async (event) => {
     event.preventDefault()
+    if (entrySubmitting) return
     const value = parseFloat(String(amount).replace(',', '.'))
-    if (!Number.isFinite(value) || value <= 0) return
+    if (!Number.isFinite(value) || value <= 0) {
+      setEntryError('Ange ett giltigt belopp större än noll.')
+      return
+    }
+    setEntrySubmitting(true)
+    setEntryError('')
     const wasAdded = await add({
       kind,
       category: category.trim() || null,
@@ -199,17 +209,24 @@ export default function Budget() {
       entry_date: entryDate || today(),
       currency,
     })
-    if (!wasAdded) return
-
-    setCategory('')
-    setAmount('')
-    setNote('')
-    setEntryDate(today())
+    if (wasAdded) {
+      setCategory('')
+      setAmount('')
+      setNote('')
+      setEntryDate(today())
+    } else {
+      setEntryError('Budgetposten kunde inte sparas. Försök igen.')
+    }
+    setEntrySubmitting(false)
   }
 
   const handleSaveSettings = async (event) => {
     event.preventDefault()
-    if (!validRate) return
+    if (settingsSaving) return
+    if (!validRate) {
+      setSettingsError('Ange en giltig växelkurs större än noll.')
+      return
+    }
 
     setSettingsSaving(true)
     setSettingsError(null)
@@ -226,11 +243,20 @@ export default function Budget() {
 
   const handleSaveGoal = async (event) => {
     event.preventDefault()
+    if (goalSubmitting) return
     const value = Number.parseFloat(String(goalAmount).replace(',', '.'))
-    if (!Number.isFinite(value) || value <= 0) return
+    if (!Number.isFinite(value) || value <= 0) {
+      setGoalError('Ange en giltig månadsbudget större än noll.')
+      return
+    }
 
-    if (selectedGoal) await updateGoal(selectedGoal.id, { amount: value })
-    else await addGoal({ month: selectedMonth, amount: value })
+    setGoalSubmitting(true)
+    setGoalError('')
+    const wasSaved = selectedGoal
+      ? await updateGoal(selectedGoal.id, { amount: value })
+      : await addGoal({ month: selectedMonth, amount: value })
+    if (!wasSaved) setGoalError('Månadsbudgeten kunde inte sparas. Försök igen.')
+    setGoalSubmitting(false)
   }
 
   const handleRemoveEntry = (entry) => {
@@ -305,7 +331,7 @@ export default function Budget() {
             <span style={{ width: `${Math.min(goalPercentage, 100)}%` }} />
           </div>
         )}
-        <form className="add-row budget-goal-form" onSubmit={handleSaveGoal}>
+        <form className="add-row budget-goal-form" onSubmit={handleSaveGoal} noValidate>
           <input
             type="number"
             inputMode="decimal"
@@ -316,10 +342,11 @@ export default function Budget() {
             placeholder={`Budget i ${baseCurrency}`}
             aria-label={`Månadsbudget i ${baseCurrency}`}
           />
-          <button type="submit" className="btn secondary">
-            {selectedGoal ? 'Uppdatera' : 'Sätt budget'}
+          <button type="submit" className="btn secondary" disabled={goalSubmitting}>
+            {goalSubmitting ? 'Sparar…' : selectedGoal ? 'Uppdatera' : 'Sätt budget'}
           </button>
         </form>
+        {goalError && <p className="error">{goalError}</p>}
       </div>
 
       <div className="card budget-chart">
@@ -361,7 +388,7 @@ export default function Budget() {
         </div>
       </div>
 
-      <form onSubmit={handleAdd} className="form card budget-form">
+      <form onSubmit={handleAdd} className="form card budget-form" noValidate>
         <div className="form-row">
           <label>
             Typ
@@ -412,14 +439,15 @@ export default function Budget() {
           Datum
           <input type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} />
         </label>
-        <button type="submit" className="btn primary">
-          Lägg till
+        <button type="submit" className="btn primary" disabled={entrySubmitting}>
+          {entrySubmitting ? 'Sparar…' : 'Lägg till'}
         </button>
+        {entryError && <p className="error">{entryError}</p>}
       </form>
 
       <details className="card budget-settings">
         <summary>Valutainställningar</summary>
-        <form className="form" onSubmit={handleSaveSettings}>
+        <form className="form" onSubmit={handleSaveSettings} noValidate>
           <label>
             Huvudvaluta
             <select
@@ -443,7 +471,7 @@ export default function Budget() {
               disabled={settingsLoading}
             />
           </label>
-          <button type="submit" className="btn secondary" disabled={settingsSaving || !validRate}>
+          <button type="submit" className="btn secondary" disabled={settingsSaving}>
             {settingsSaving ? 'Sparar…' : 'Spara inställningar'}
           </button>
         </form>

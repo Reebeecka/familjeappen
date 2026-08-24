@@ -39,6 +39,7 @@ export default function Chat() {
   const [errorResult, setErrorResult] = useState({ householdId: null, message: null })
   const [now, setNow] = useState(0)
   const messagesEndRef = useRef(null)
+  const sendingRef = useRef(false)
 
   const messages = result.householdId === householdId ? result.messages : []
   const loading = Boolean(householdId && supabase && result.householdId !== householdId)
@@ -141,26 +142,36 @@ export default function Chat() {
     event.preventDefault()
 
     const trimmedBody = body.trim()
-    if (!trimmedBody || !householdId || !user || sending) return
+    if (!trimmedBody || !householdId || !user || !supabase || sendingRef.current) return
 
+    sendingRef.current = true
     setSending(true)
     setErrorResult({ householdId, message: null })
 
-    const { error: insertError } = await supabase.from('messages').insert({
-      household_id: householdId,
-      sender_id: user.id,
-      body: trimmedBody,
-    })
+    try {
+      const { error: insertError } = await supabase.from('messages').insert({
+        household_id: householdId,
+        sender_id: user.id,
+        body: trimmedBody,
+      })
 
-    if (insertError) {
+      if (insertError) {
+        setErrorResult({
+          householdId,
+          message: 'Meddelandet kunde inte skickas. Försök igen.',
+        })
+      } else {
+        setBody('')
+      }
+    } catch {
       setErrorResult({
         householdId,
         message: 'Meddelandet kunde inte skickas. Försök igen.',
       })
-    } else {
-      setBody('')
+    } finally {
+      sendingRef.current = false
+      setSending(false)
     }
-    setSending(false)
   }
 
   return (

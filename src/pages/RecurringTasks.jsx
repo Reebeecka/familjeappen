@@ -34,22 +34,35 @@ export default function RecurringTasks() {
   const [cadence, setCadence] = useState('daily')
   const [weekday, setWeekday] = useState(1)
   const [dayOfMonth, setDayOfMonth] = useState(1)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const handleAdd = async (event) => {
     event.preventDefault()
+    if (submitting) return
     const trimmed = title.trim()
-    if (!trimmed) return
-    await add({
+    if (!trimmed) {
+      setSubmitError('Ange en titel för uppgiften.')
+      return
+    }
+    setSubmitting(true)
+    setSubmitError('')
+    const wasAdded = await add({
       title: trimmed,
       cadence,
       weekday: cadence === 'weekly' ? Number(weekday) : null,
       day_of_month: cadence === 'monthly' ? Number(dayOfMonth) : null,
       active: true,
     })
-    setTitle('')
-    setCadence('daily')
-    setWeekday(1)
-    setDayOfMonth(1)
+    if (wasAdded) {
+      setTitle('')
+      setCadence('daily')
+      setWeekday(1)
+      setDayOfMonth(1)
+    } else {
+      setSubmitError('Uppgiften kunde inte sparas. Försök igen.')
+    }
+    setSubmitting(false)
   }
 
   const handleRemove = (task) => {
@@ -108,9 +121,10 @@ export default function RecurringTasks() {
             </select>
           </label>
         )}
-        <button type="submit" className="btn primary">
-          Lägg till
+        <button type="submit" className="btn primary" disabled={submitting}>
+          {submitting ? 'Sparar…' : 'Lägg till'}
         </button>
+        {submitError && <p className="error">{submitError}</p>}
       </form>
 
       {error && <p className="error">{error}</p>}

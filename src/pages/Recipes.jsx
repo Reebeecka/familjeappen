@@ -35,6 +35,16 @@ function linesFrom(value) {
     .filter(Boolean)
 }
 
+function isValidHttpUrl(value) {
+  if (!value.trim()) return true
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 function formFromRecipe(recipe) {
   return {
     title: recipe.title ?? '',
@@ -57,7 +67,20 @@ function RecipeForm({ initialForm, isEditing, onCancel, onSave }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    if (!form.title.trim()) return
+    if (isSaving) return
+    if (!form.title.trim()) {
+      setSaveError('Ange en titel för receptet.')
+      return
+    }
+    if (!isValidHttpUrl(form.sourceUrl) || !isValidHttpUrl(form.imageUrl)) {
+      setSaveError('Ange en giltig länk som börjar med http:// eller https://.')
+      return
+    }
+    const servings = form.servings ? Number(form.servings) : null
+    if (servings !== null && (!Number.isInteger(servings) || servings < 1)) {
+      setSaveError('Ange ett giltigt antal portioner.')
+      return
+    }
 
     setIsSaving(true)
     setSaveError('')
@@ -65,7 +88,7 @@ function RecipeForm({ initialForm, isEditing, onCancel, onSave }) {
       title: form.title.trim(),
       source_url: form.sourceUrl.trim() || null,
       image_url: form.imageUrl.trim() || null,
-      servings: form.servings ? Number(form.servings) : null,
+      servings,
       ingredients: linesFrom(form.ingredients),
       steps: linesFrom(form.steps),
     })
@@ -74,7 +97,7 @@ function RecipeForm({ initialForm, isEditing, onCancel, onSave }) {
   }
 
   return (
-    <form className="card form recipe-form" onSubmit={handleSubmit}>
+    <form className="card form recipe-form" onSubmit={handleSubmit} noValidate>
       <h2>{isEditing ? 'Redigera recept' : 'Nytt recept'}</h2>
 
       <label>
@@ -161,6 +184,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
   const [actionError, setActionError] = useState('')
 
   const runAction = async (action, successMessage) => {
+    if (isWorking) return
     setIsWorking(true)
     setMessage('')
     setActionError('')
@@ -219,6 +243,11 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
 
   const planMeal = (event) => {
     event.preventDefault()
+    if (isWorking) return
+    if (!mealDate) {
+      setActionError('Välj ett datum för måltiden.')
+      return
+    }
     runAction(
       () =>
         supabase.from('meals').insert({
@@ -307,7 +336,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
           Lägg ingredienser på inköpslistan
         </button>
 
-        <form className="recipe-meal-form" onSubmit={planMeal}>
+        <form className="recipe-meal-form" onSubmit={planMeal} noValidate>
           <label>
             Datum
             <input
@@ -328,7 +357,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
             </select>
           </label>
           <button type="submit" className="btn primary" disabled={isWorking}>
-            Planera som måltid
+            {isWorking ? 'Sparar…' : 'Planera som måltid'}
           </button>
         </form>
 
@@ -355,8 +384,16 @@ export default function Recipes() {
 
   const handleImport = async (event) => {
     event.preventDefault()
+    if (isImporting) return
     const url = importUrl.trim()
-    if (!url) return
+    if (!url) {
+      setImportError('Ange en länk till receptet.')
+      return
+    }
+    if (!isValidHttpUrl(url)) {
+      setImportError('Ange en giltig länk som börjar med http:// eller https://.')
+      return
+    }
 
     setIsImporting(true)
     setImportError('')
@@ -433,7 +470,7 @@ export default function Recipes() {
       </div>
 
       {!draftForm && (
-        <form className="card recipe-import" onSubmit={handleImport}>
+        <form className="card recipe-import" onSubmit={handleImport} noValidate>
           <label htmlFor="recipe-import-url">Importera från länk</label>
           <div className="add-row">
             <input

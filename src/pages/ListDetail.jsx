@@ -4,7 +4,7 @@ import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import { useAuth } from '../lib/AuthContext'
 import { useHouseholdMembers } from '../lib/useHouseholdMembers'
-import { isListItemOverdue, sortListItems, useListItems } from '../lib/useListItems'
+import { isListItemOverdue, useListItems } from '../lib/useListItems'
 import { supabase } from '../lib/supabase'
 import './ListDetail.css'
 
@@ -14,12 +14,54 @@ const PRIORITIES = [
   { value: 'hög', label: 'Hög' },
 ]
 
+const PRIORITY_LABELS = new Map(PRIORITIES.map(({ value, label }) => [value, label]))
+const PRIORITY_RANK = { hög: 0, normal: 1, låg: 2 }
+
+function getDateDifference(dueDate) {
+  const [year, month, day] = dueDate.split('-').map(Number)
+  const now = new Date()
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  const due = Date.UTC(year, month - 1, day)
+  return Math.round((due - today) / 86_400_000)
+}
+
 function formatDueDate(dueDate) {
   if (!dueDate) return null
+  const difference = getDateDifference(dueDate)
+  if (difference === 0) return 'Idag'
+  if (difference === 1) return 'Imorgon'
+
   return new Intl.DateTimeFormat('sv-SE', {
     day: 'numeric',
     month: 'short',
   }).format(new Date(`${dueDate}T00:00:00`))
+}
+
+function sortDisplayItems(items) {
+  return [...items].sort((first, second) => {
+    if (first.done !== second.done) return Number(first.done) - Number(second.done)
+
+    const overdueDifference =
+      Number(isListItemOverdue(second)) - Number(isListItemOverdue(first))
+    if (overdueDifference) return overdueDifference
+
+    const priorityDifference =
+      (PRIORITY_RANK[first.priority] ?? PRIORITY_RANK.normal) -
+      (PRIORITY_RANK[second.priority] ?? PRIORITY_RANK.normal)
+    if (priorityDifference) return priorityDifference
+
+    if (first.due_date || second.due_date) {
+      if (!first.due_date) return 1
+      if (!second.due_date) return -1
+      const dueDateDifference = first.due_date.localeCompare(second.due_date)
+      if (dueDateDifference) return dueDateDifference
+    }
+
+    const firstPosition = first.position ?? Number.MAX_SAFE_INTEGER
+    const secondPosition = second.position ?? Number.MAX_SAFE_INTEGER
+    if (firstPosition !== secondPosition) return firstPosition - secondPosition
+    return new Date(first.created_at) - new Date(second.created_at)
+  })
 }
 
 function ListItem({
@@ -40,9 +82,12 @@ function ListItem({
   update,
   remove,
 }) {
+  const [areSubtasksExpanded, setAreSubtasksExpanded] = useState(true)
   const assignedMember = membersById.get(item.assigned_to)
   const completedSubtasks = subtasks.filter((subtask) => subtask.done).length
+  const subtaskProgress = subtasks.length ? (completedSubtasks / subtasks.length) * 100 : 0
   const overdue = isListItemOverdue(item)
+  const priority = item.priority ?? 'normal'
   const itemClasses = [
     'list-item',
     'list-detail-item',
@@ -68,25 +113,51 @@ function ListItem({
           </label>
 
           <div className="list-detail-status">
-            {item.priority === 'hög' && (
-              <span className="list-detail-priority-badge">Hög prioritet</span>
-            )}
+            <span
+              className={`list-detail-priority-badge priority-${priority}`}
+              title={`Prioritet: ${PRIORITY_LABELS.get(priority) ?? 'Normal'}`}
+            >
+              {PRIORITY_LABELS.get(priority) ?? 'Normal'}
+            </span>
             {item.due_date && (
               <span className={overdue ? 'list-detail-due overdue' : 'list-detail-due muted'}>
-                {overdue ? 'Försenad' : 'Förfaller'} {formatDueDate(item.due_date)}
+                <span aria-hidden="true">◷</span>{' '}
+                {overdue ? `Försenad · ${formatDueDate(item.due_date)}` : formatDueDate(item.due_date)}
               </span>
             )}
             {!isSubtask && subtasks.length > 0 && (
-              <span className="muted small">
-                {completedSubtasks}/{subtasks.length} klara
-              </span>
+              <button
+                type="button"
+                className="list-detail-progress-toggle"
+                onClick={() => setAreSubtasksExpanded((current) => !current)}
+                aria-expanded={areSubtasksExpanded}
+              >
+                <span
+                  className="list-detail-progress-track"
+                  role="progressbar"
+                  aria-label={`${completedSubtasks} av ${subtasks.length} deluppgifter klara`}
+                  aria-valuemin="0"
+                  aria-valuemax={subtasks.length}
+                  aria-valuenow={completedSubtasks}
+                >
+                  <span
+                    className="list-detail-progress-value"
+                    style={{ width: `${subtaskProgress}%` }}
+                  />
+                </span>
+                <span>
+                  {completedSubtasks}/{subtasks.length}
+                </span>
+                <span aria-hidden="true">{areSubtasksExpanded ? '▾' : '▸'}</span>
+              </button>
             )}
           </div>
 
           {isShopping && (item.quantity || item.category) && (
-            <span className="muted small">
-              {[item.quantity, item.category].filter(Boolean).join(' · ')}
-            </span>
+            <div className="list-detail-shopping-meta">
+              {item.quantity && <span className="list-detail-meta-chip">Antal: {item.quantity}</span>}
+              {item.category && <span className="list-detail-meta-chip">{item.category}</span>}
+            </div>
           )}
 
           {!isShopping && assignedMember && (
@@ -177,7 +248,7 @@ function ListItem({
                   className="btn primary"
                   disabled={addingSubtask || !subtaskTitle.trim()}
                 >
-                  {addingSubtask ? 'Lägger till…' : 'Lägg till'}
+                  {addingSubtask ? 'Sparar…' : 'Lägg till'}
                 </button>
               </div>
             </form>
@@ -203,9 +274,9 @@ function ListItem({
         </button>
       </div>
 
-      {!isSubtask && subtasks.length > 0 && (
+      {!isSubtask && subtasks.length > 0 && areSubtasksExpanded && (
         <ul className="list-detail-subtasks">
-          {sortListItems(subtasks).map((subtask) => (
+          {sortDisplayItems(subtasks).map((subtask) => (
             <ListItem
               key={subtask.id}
               item={subtask}
@@ -252,7 +323,7 @@ export default function ListDetail() {
     [members],
   )
   const topLevelItems = useMemo(
-    () => sortListItems(items.filter((item) => !item.parent_id)),
+    () => sortDisplayItems(items.filter((item) => !item.parent_id)),
     [items],
   )
   const subtasksByParent = useMemo(() => {
@@ -409,7 +480,11 @@ export default function ListDetail() {
         </h1>
       </header>
 
-      <form onSubmit={handleAdd} className="form card list-detail-form">
+      <form
+        onSubmit={handleAdd}
+        className="form card list-detail-form"
+        aria-busy={submitting}
+      >
         <label>
           {isShopping ? 'Vara' : 'Uppgift'}
           <input
@@ -482,7 +557,7 @@ export default function ListDetail() {
         </div>
 
         <button type="submit" className="btn primary" disabled={submitting || !title.trim()}>
-          {submitting ? 'Lägger till…' : 'Lägg till'}
+          {submitting ? 'Sparar…' : 'Lägg till'}
         </button>
       </form>
 
