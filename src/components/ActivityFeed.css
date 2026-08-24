@@ -37,6 +37,23 @@
   overflow-wrap: anywhere;
 }
 
+a.activity-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: color 0.15s ease;
+}
+
+a.activity-link:hover {
+  color: var(--primary);
+}
+
+a.activity-link:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 .activity-item time {
   display: block;
 }

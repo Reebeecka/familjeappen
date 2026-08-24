@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 import EmptyState from './EmptyState'
@@ -6,11 +7,19 @@ import Spinner from './Spinner'
 import './ActivityFeed.css'
 
 const MAX_ACTIVITIES = 20
-const REACTION_EMOJIS = ['👍', '❤️', '😂', '🎉']
+const REACTION_EMOJIS = ['👍', '👎', '❤️', '🎉']
 
 function addReaction(current, reaction) {
   if (current.some((item) => item.id === reaction.id)) return current
   return [...current, reaction]
+}
+
+function activityLink(activity) {
+  if (activity.entity_id) return `/listor/${activity.entity_id}`
+  const entity = activity.entity ?? ''
+  if (entity.includes('händelse')) return '/kalender'
+  if (entity.includes('måltid')) return '/maltider'
+  return null
 }
 
 function relativeTime(createdAt, now) {
@@ -245,12 +254,24 @@ export default function ActivityFeed() {
 
         {activities.length > 0 && (
           <ul className="list activity-list">
-            {activities.map((activity) => (
-              <li className="activity-item" key={activity.id}>
-                <p className="activity-text">
+            {activities.map((activity) => {
+              const link = activityLink(activity)
+              const textContent = (
+                <>
                   <strong>{activity.actor_name || 'Någon'}</strong> {activity.action}{' '}
-                  {activity.entity}: {activity.summary}
-                </p>
+                  {activity.entity} <strong>{activity.summary}</strong>
+                </>
+              )
+
+              return (
+              <li className="activity-item" key={activity.id}>
+                {link ? (
+                  <Link to={link} className="activity-text activity-link">
+                    {textContent}
+                  </Link>
+                ) : (
+                  <p className="activity-text">{textContent}</p>
+                )}
                 <time className="muted small" dateTime={activity.created_at}>
                   {relativeTime(activity.created_at, now)}
                 </time>
@@ -282,7 +303,8 @@ export default function ActivityFeed() {
                   })}
                 </div>
               </li>
-            ))}
+              )
+            })}
           </ul>
         )}
         {reactionError && (
