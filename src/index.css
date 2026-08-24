@@ -74,7 +74,7 @@ code {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   border: 1px solid rgba(228, 221, 211, 0.72);
-  padding: 1.5rem;
+  padding: 1.15rem;
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
@@ -259,7 +259,7 @@ input:focus {
 
 .app-main {
   flex: 1;
-  padding: 1.35rem;
+  padding: 1.05rem;
   padding-bottom: 6rem;
 }
 
@@ -270,7 +270,7 @@ input:focus {
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 /* Bottom nav */

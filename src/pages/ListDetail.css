@@ -69,7 +69,28 @@
   min-width: 0;
   flex: 1;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.4rem;
+}
+
+.list-detail-item-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.list-detail-edit-toggle {
+  align-self: flex-start;
+  padding: 0.2rem 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.list-detail-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-top: 0.15rem;
 }
 
 .list-detail-list > li,

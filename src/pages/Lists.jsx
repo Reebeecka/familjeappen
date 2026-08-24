@@ -8,6 +8,7 @@ import './Lists.css'
 const TYPE_OPTIONS = {
   todo: { label: 'Att göra', icon: '✅' },
   shopping: { label: 'Inköp', icon: '🛒' },
+  simple: { label: 'Annat', icon: '🗒️' },
 }
 
 export default function Lists() {

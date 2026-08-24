@@ -67,7 +67,7 @@ function sortDisplayItems(items) {
 function ListItem({
   item,
   subtasks,
-  isShopping,
+  listType,
   members,
   membersById,
   membersLoading,
@@ -83,175 +83,212 @@ function ListItem({
   remove,
 }) {
   const [areSubtasksExpanded, setAreSubtasksExpanded] = useState(true)
+  const [isEditing, setIsEditing] = useState(false)
+  const isShopping = listType === 'shopping'
+  const isTodo = listType === 'todo'
   const assignedMember = membersById.get(item.assigned_to)
   const completedSubtasks = subtasks.filter((subtask) => subtask.done).length
   const subtaskProgress = subtasks.length ? (completedSubtasks / subtasks.length) * 100 : 0
-  const overdue = isListItemOverdue(item)
+  const overdue = isTodo && isListItemOverdue(item)
   const priority = item.priority ?? 'normal'
+  const showPriorityBadge = isTodo && priority !== 'normal'
+  const canHaveSubtasks = !isSubtask && listType !== 'shopping'
+  const hasEditor = isTodo || canHaveSubtasks
   const itemClasses = [
     'list-item',
     'list-detail-item',
     item.done ? 'done' : '',
     overdue ? 'overdue' : '',
-    item.priority === 'hög' ? 'high-priority' : '',
+    isTodo && item.priority === 'hög' ? 'high-priority' : '',
     isSubtask ? 'subtask' : '',
   ]
     .filter(Boolean)
     .join(' ')
 
+  const itemNoun = isSubtask ? 'deluppgiften' : isShopping ? 'varan' : 'uppgiften'
+
   return (
     <li className={isSubtask ? 'list-detail-subtask-entry' : 'list-detail-parent-entry'}>
       <div className={itemClasses}>
         <div className="list-detail-item-content">
-          <label className="check-label">
-            <input
-              type="checkbox"
-              checked={item.done}
-              onChange={() => update(item.id, { done: !item.done })}
-            />
-            <span>{item.title}</span>
-          </label>
+          <div className="list-detail-item-main">
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={item.done}
+                onChange={() => update(item.id, { done: !item.done })}
+              />
+              <span>{item.title}</span>
+            </label>
 
-          <div className="list-detail-status">
-            <span
-              className={`list-detail-priority-badge priority-${priority}`}
-              title={`Prioritet: ${PRIORITY_LABELS.get(priority) ?? 'Normal'}`}
-            >
-              {PRIORITY_LABELS.get(priority) ?? 'Normal'}
-            </span>
-            {item.due_date && (
-              <span className={overdue ? 'list-detail-due overdue' : 'list-detail-due muted'}>
-                <span aria-hidden="true">◷</span>{' '}
-                {overdue ? `Försenad · ${formatDueDate(item.due_date)}` : formatDueDate(item.due_date)}
+            {(showPriorityBadge ||
+              (isTodo && item.due_date) ||
+              (!isSubtask && subtasks.length > 0)) && (
+              <div className="list-detail-status">
+                {showPriorityBadge && (
+                  <span
+                    className={`list-detail-priority-badge priority-${priority}`}
+                    title={`Prioritet: ${PRIORITY_LABELS.get(priority) ?? 'Normal'}`}
+                  >
+                    {PRIORITY_LABELS.get(priority) ?? 'Normal'}
+                  </span>
+                )}
+                {isTodo && item.due_date && (
+                  <span className={overdue ? 'list-detail-due overdue' : 'list-detail-due muted'}>
+                    <span aria-hidden="true">◷</span>{' '}
+                    {overdue
+                      ? `Försenad · ${formatDueDate(item.due_date)}`
+                      : formatDueDate(item.due_date)}
+                  </span>
+                )}
+                {!isSubtask && subtasks.length > 0 && (
+                  <button
+                    type="button"
+                    className="list-detail-progress-toggle"
+                    onClick={() => setAreSubtasksExpanded((current) => !current)}
+                    aria-expanded={areSubtasksExpanded}
+                  >
+                    <span
+                      className="list-detail-progress-track"
+                      role="progressbar"
+                      aria-label={`${completedSubtasks} av ${subtasks.length} deluppgifter klara`}
+                      aria-valuemin="0"
+                      aria-valuemax={subtasks.length}
+                      aria-valuenow={completedSubtasks}
+                    >
+                      <span
+                        className="list-detail-progress-value"
+                        style={{ width: `${subtaskProgress}%` }}
+                      />
+                    </span>
+                    <span>
+                      {completedSubtasks}/{subtasks.length}
+                    </span>
+                    <span aria-hidden="true">{areSubtasksExpanded ? '▾' : '▸'}</span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {isShopping && (item.quantity || item.category) && (
+              <div className="list-detail-shopping-meta">
+                {item.quantity && (
+                  <span className="list-detail-meta-chip">Antal: {item.quantity}</span>
+                )}
+                {item.category && <span className="list-detail-meta-chip">{item.category}</span>}
+              </div>
+            )}
+
+            {isTodo && assignedMember && (
+              <span className="list-detail-member muted small">
+                <span
+                  className="list-detail-member-dot"
+                  style={{ backgroundColor: assignedMember.color || 'var(--muted)' }}
+                  aria-hidden="true"
+                />
+                {assignedMember.display_name || 'Namnlös medlem'}
               </span>
             )}
-            {!isSubtask && subtasks.length > 0 && (
-              <button
-                type="button"
-                className="list-detail-progress-toggle"
-                onClick={() => setAreSubtasksExpanded((current) => !current)}
-                aria-expanded={areSubtasksExpanded}
-              >
-                <span
-                  className="list-detail-progress-track"
-                  role="progressbar"
-                  aria-label={`${completedSubtasks} av ${subtasks.length} deluppgifter klara`}
-                  aria-valuemin="0"
-                  aria-valuemax={subtasks.length}
-                  aria-valuenow={completedSubtasks}
-                >
-                  <span
-                    className="list-detail-progress-value"
-                    style={{ width: `${subtaskProgress}%` }}
-                  />
-                </span>
-                <span>
-                  {completedSubtasks}/{subtasks.length}
-                </span>
-                <span aria-hidden="true">{areSubtasksExpanded ? '▾' : '▸'}</span>
-              </button>
-            )}
           </div>
 
-          {isShopping && (item.quantity || item.category) && (
-            <div className="list-detail-shopping-meta">
-              {item.quantity && <span className="list-detail-meta-chip">Antal: {item.quantity}</span>}
-              {item.category && <span className="list-detail-meta-chip">{item.category}</span>}
-            </div>
-          )}
-
-          {!isShopping && assignedMember && (
-            <span className="list-detail-member muted small">
-              <span
-                className="list-detail-member-dot"
-                style={{ backgroundColor: assignedMember.color || 'var(--muted)' }}
-                aria-hidden="true"
-              />
-              {assignedMember.avatar && <span aria-hidden="true">{assignedMember.avatar}</span>}
-              {assignedMember.display_name || 'Namnlös medlem'}
-            </span>
-          )}
-
-          <div className="list-detail-edit-fields">
-            <label className="small">
-              Förfallodatum
-              <input
-                type="date"
-                value={item.due_date ?? ''}
-                onChange={(event) => update(item.id, { due_date: event.target.value || null })}
-              />
-            </label>
-            <label className="small">
-              Prioritet
-              <select
-                value={item.priority ?? 'normal'}
-                onChange={(event) => update(item.id, { priority: event.target.value })}
-              >
-                {PRIORITIES.map((priority) => (
-                  <option key={priority.value} value={priority.value}>
-                    {priority.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {!isShopping && (
-            <label className="small list-detail-assignment">
-              Tilldela till
-              <select
-                value={item.assigned_to ?? ''}
-                onChange={(event) =>
-                  update(item.id, { assigned_to: event.target.value || null })
-                }
-                disabled={membersLoading}
-              >
-                <option value="">Ingen</option>
-                {members.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.avatar ? `${member.avatar} ` : ''}
-                    {member.display_name || 'Namnlös medlem'}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          {!isSubtask && (
+          {hasEditor && (
             <button
               type="button"
-              className="btn ghost list-detail-add-subtask"
-              onClick={() => onShowSubtaskForm(item.id)}
+              className="btn ghost list-detail-edit-toggle"
+              onClick={() => setIsEditing((current) => !current)}
+              aria-expanded={isEditing}
             >
-              + Lägg till deluppgift
+              {isEditing ? 'Dölj' : 'Redigera'}
             </button>
           )}
 
-          {!isSubtask && subtaskParentId === item.id && (
-            <form className="list-detail-subtask-form" onSubmit={onAddSubtask}>
-              <label>
-                Deluppgift
-                <input
-                  type="text"
-                  value={subtaskTitle}
-                  onChange={(event) => onSubtaskTitleChange(event.target.value)}
-                  placeholder="Ny deluppgift…"
-                  autoFocus
-                />
-              </label>
-              <div className="list-detail-subtask-actions">
-                <button type="button" className="btn ghost" onClick={onCancelSubtask}>
-                  Avbryt
-                </button>
+          {hasEditor && isEditing && (
+            <div className="list-detail-editor">
+              {isTodo && (
+                <div className="list-detail-edit-fields">
+                  <label className="small">
+                    Förfallodatum
+                    <input
+                      type="date"
+                      value={item.due_date ?? ''}
+                      onChange={(event) =>
+                        update(item.id, { due_date: event.target.value || null })
+                      }
+                    />
+                  </label>
+                  <label className="small">
+                    Prioritet
+                    <select
+                      value={item.priority ?? 'normal'}
+                      onChange={(event) => update(item.id, { priority: event.target.value })}
+                    >
+                      {PRIORITIES.map((priorityOption) => (
+                        <option key={priorityOption.value} value={priorityOption.value}>
+                          {priorityOption.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              )}
+
+              {isTodo && (
+                <label className="small list-detail-assignment">
+                  Tilldela till
+                  <select
+                    value={item.assigned_to ?? ''}
+                    onChange={(event) =>
+                      update(item.id, { assigned_to: event.target.value || null })
+                    }
+                    disabled={membersLoading}
+                  >
+                    <option value="">Ingen</option>
+                    {members.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.display_name || 'Namnlös medlem'}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              {canHaveSubtasks && (
                 <button
-                  type="submit"
-                  className="btn primary"
-                  disabled={addingSubtask || !subtaskTitle.trim()}
+                  type="button"
+                  className="btn ghost list-detail-add-subtask"
+                  onClick={() => onShowSubtaskForm(item.id)}
                 >
-                  {addingSubtask ? 'Sparar…' : 'Lägg till'}
+                  + Lägg till deluppgift
                 </button>
-              </div>
-            </form>
+              )}
+
+              {canHaveSubtasks && subtaskParentId === item.id && (
+                <form className="list-detail-subtask-form" onSubmit={onAddSubtask}>
+                  <label>
+                    Deluppgift
+                    <input
+                      type="text"
+                      value={subtaskTitle}
+                      onChange={(event) => onSubtaskTitleChange(event.target.value)}
+                      placeholder="Ny deluppgift…"
+                      autoFocus
+                    />
+                  </label>
+                  <div className="list-detail-subtask-actions">
+                    <button type="button" className="btn ghost" onClick={onCancelSubtask}>
+                      Avbryt
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn primary"
+                      disabled={addingSubtask || !subtaskTitle.trim()}
+                    >
+                      {addingSubtask ? 'Sparar…' : 'Lägg till'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
         </div>
 
@@ -259,16 +296,15 @@ function ListItem({
           type="button"
           className="btn icon list-detail-remove"
           onClick={() => {
-            const itemType = isSubtask ? 'deluppgiften' : isShopping ? 'varan' : 'uppgiften'
             if (
               !window.confirm(
-                `Vill du ta bort ${itemType} "${item.title}"? Detta går inte att ångra.`,
+                `Vill du ta bort ${itemNoun} "${item.title}"? Detta går inte att ångra.`,
               )
             )
               return
             remove(item.id)
           }}
-          aria-label={`Ta bort ${isSubtask ? 'deluppgiften' : isShopping ? 'varan' : 'uppgiften'} ${item.title}`}
+          aria-label={`Ta bort ${itemNoun} ${item.title}`}
         >
           🗑️
         </button>
@@ -281,7 +317,7 @@ function ListItem({
               key={subtask.id}
               item={subtask}
               subtasks={[]}
-              isShopping={isShopping}
+              listType={listType}
               members={members}
               membersById={membersById}
               membersLoading={membersLoading}
@@ -390,6 +426,11 @@ export default function ListDetail() {
   const listError = hasLoadedList ? listResult.error : null
   const listLoading = Boolean(listScopeKey && !hasLoadedList)
 
+  const listType = list?.type ?? 'todo'
+  const isShopping = listType === 'shopping'
+  const isSimple = listType === 'simple'
+  const isTodo = listType === 'todo'
+
   const handleAdd = async (event) => {
     event.preventDefault()
     const trimmedTitle = title.trim()
@@ -399,11 +440,11 @@ export default function ListDetail() {
     const wasAdded = await add({
       title: trimmedTitle,
       done: false,
-      assigned_to: list.type === 'todo' ? assignedTo || null : null,
-      quantity: list.type === 'shopping' ? quantity.trim() || null : null,
-      category: list.type === 'shopping' ? category.trim() || null : null,
-      due_date: dueDate || null,
-      priority,
+      assigned_to: isTodo ? assignedTo || null : null,
+      quantity: isShopping ? quantity.trim() || null : null,
+      category: isShopping ? category.trim() || null : null,
+      due_date: isTodo ? dueDate || null : null,
+      priority: isTodo ? priority : 'normal',
       parent_id: null,
     })
     setSubmitting(false)
@@ -467,7 +508,17 @@ export default function ListDetail() {
     )
   }
 
-  const isShopping = list.type === 'shopping'
+  const itemLabel = isShopping ? 'Vara' : isSimple ? 'Punkt' : 'Uppgift'
+  const itemPlaceholder = isShopping ? 'Ny vara…' : isSimple ? 'Ny punkt…' : 'Ny uppgift…'
+  const fallbackIcon = isShopping ? '🛒' : isSimple ? '🗒️' : '✅'
+  const emptyTitle = isShopping
+    ? 'Inköpslistan är tom'
+    : isSimple
+      ? 'Listan är tom'
+      : 'Inga uppgifter än'
+  const emptyDescription = isShopping
+    ? 'Lägg till den första varan ovan.'
+    : 'Lägg till den första punkten ovan.'
 
   return (
     <div className="page">
@@ -476,7 +527,7 @@ export default function ListDetail() {
           ← Listor
         </Link>
         <h1 className="page-title">
-          {list.icon || (isShopping ? '🛒' : '✅')} {list.name}
+          {list.icon || fallbackIcon} {list.name}
         </h1>
       </header>
 
@@ -486,16 +537,16 @@ export default function ListDetail() {
         aria-busy={submitting}
       >
         <label>
-          {isShopping ? 'Vara' : 'Uppgift'}
+          {itemLabel}
           <input
             type="text"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder={isShopping ? 'Ny vara…' : 'Ny uppgift…'}
+            placeholder={itemPlaceholder}
           />
         </label>
 
-        {isShopping ? (
+        {isShopping && (
           <div className="list-detail-fields">
             <label>
               Antal (valfritt)
@@ -516,45 +567,48 @@ export default function ListDetail() {
               />
             </label>
           </div>
-        ) : (
-          <label>
-            Tilldela till
-            <select
-              value={assignedTo}
-              onChange={(event) => setAssignedTo(event.target.value)}
-              disabled={membersLoading}
-            >
-              <option value="">Ingen</option>
-              {members.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.avatar ? `${member.avatar} ` : ''}
-                  {member.display_name || 'Namnlös medlem'}
-                </option>
-              ))}
-            </select>
-          </label>
         )}
 
-        <div className="list-detail-fields">
-          <label>
-            Förfallodatum (valfritt)
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(event) => setDueDate(event.target.value)}
-            />
-          </label>
-          <label>
-            Prioritet
-            <select value={priority} onChange={(event) => setPriority(event.target.value)}>
-              {PRIORITIES.map((priorityOption) => (
-                <option key={priorityOption.value} value={priorityOption.value}>
-                  {priorityOption.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        {isTodo && (
+          <>
+            <label>
+              Tilldela till
+              <select
+                value={assignedTo}
+                onChange={(event) => setAssignedTo(event.target.value)}
+                disabled={membersLoading}
+              >
+                <option value="">Ingen</option>
+                {members.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.display_name || 'Namnlös medlem'}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="list-detail-fields">
+              <label>
+                Förfallodatum (valfritt)
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(event) => setDueDate(event.target.value)}
+                />
+              </label>
+              <label>
+                Prioritet
+                <select value={priority} onChange={(event) => setPriority(event.target.value)}>
+                  {PRIORITIES.map((priorityOption) => (
+                    <option key={priorityOption.value} value={priorityOption.value}>
+                      {priorityOption.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </>
+        )}
 
         <button type="submit" className="btn primary" disabled={submitting || !title.trim()}>
           {submitting ? 'Sparar…' : 'Lägg till'}
@@ -564,15 +618,7 @@ export default function ListDetail() {
       {(error || listError) && <p className="error">{error || listError}</p>}
       {loading && <Spinner />}
       {!loading && items.length === 0 && (
-        <EmptyState
-          icon={isShopping ? '🗒️' : '✅'}
-          title={isShopping ? 'Inköpslistan är tom' : 'Inga uppgifter än'}
-          description={
-            isShopping
-              ? 'Lägg till den första varan ovan.'
-              : 'Lägg till den första uppgiften ovan.'
-          }
-        />
+        <EmptyState icon={fallbackIcon} title={emptyTitle} description={emptyDescription} />
       )}
 
       <ul className="list list-detail-list">
@@ -581,7 +627,7 @@ export default function ListDetail() {
             key={item.id}
             item={item}
             subtasks={subtasksByParent.get(item.id) ?? []}
-            isShopping={isShopping}
+            listType={listType}
             members={members}
             membersById={membersById}
             membersLoading={membersLoading}
