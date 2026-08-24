@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Download, Folder, Trash2 } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
@@ -40,6 +41,8 @@ function formatDate(value) {
 
 export default function Documents() {
   const { householdId, user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const highlightDocId = searchParams.get('doc')
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -139,6 +142,20 @@ export default function Documents() {
       active = false
     }
   }, [items])
+
+  useEffect(() => {
+    if (!highlightDocId || items.length === 0) return
+    const doc = items.find((item) => item.id === highlightDocId)
+    if (!doc) return
+    const folderName = doc.folder?.trim()
+    setFolderFilter(folderName || NO_FOLDER)
+    window.setTimeout(() => {
+      document.getElementById(`doc-item-${doc.id}`)?.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+      })
+    }, 80)
+  }, [highlightDocId, items])
 
   const folders = [...new Set(items.map((doc) => doc.folder?.trim()).filter(Boolean))].sort(
     (first, second) => first.localeCompare(second, 'sv'),
@@ -311,7 +328,11 @@ export default function Documents() {
                 <h2 className="doc-group-title">📁 {folderName}</h2>
                 <ul className="list">
                   {documents.map((doc) => (
-                    <li key={doc.id} className="list-item doc-item">
+                    <li
+                      key={doc.id}
+                      id={`doc-item-${doc.id}`}
+                      className={`list-item doc-item${highlightDocId === doc.id ? ' highlighted' : ''}`}
+                    >
                       {isImage(doc) && previewUrls[doc.id] && (
                         <img
                           className="doc-preview"

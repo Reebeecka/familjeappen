@@ -10,19 +10,59 @@ import './ActivityFeed.css'
 const MAX_ACTIVITIES = 20
 const MAX_VISIBLE = 8
 const SWIPE_HIDE_PX = 72
-const REACTION_EMOJIS = ['👍', '👎', '❤️', '🎉']
+const REACTION_EMOJIS = ['👍', '👎']
 
 function addReaction(current, reaction) {
   if (current.some((item) => item.id === reaction.id)) return current
   return [...current, reaction]
 }
 
+const HIDDEN_ENTITIES = new Set(['måltid', 'måltiden'])
+
+function isTodoEntity(entity) {
+  return entity === 'uppgift' || entity === 'uppgiften' || entity === 'listpunkt'
+}
+
+function isEventEntity(entity) {
+  return entity === 'händelse' || entity === 'händelsen'
+}
+
 function activityLink(activity) {
+  if (activity.path) return activity.path
+  if (activity.entity === 'inköp' && activity.entity_id) return `/listor/${activity.entity_id}`
+  if (isTodoEntity(activity.entity) && activity.entity_id) return `/listor/${activity.entity_id}`
+  if (isEventEntity(activity.entity)) {
+    return activity.entity_id ? `/kalender?event=${activity.entity_id}` : '/kalender'
+  }
+  if (activity.entity === 'chatt') return '/chatt'
+  if (activity.entity === 'dokument') {
+    return activity.entity_id ? `/dokument?doc=${activity.entity_id}` : '/dokument'
+  }
   if (activity.entity_id) return `/listor/${activity.entity_id}`
-  const entity = activity.entity ?? ''
-  if (entity.includes('händelse')) return '/kalender'
-  if (entity.includes('måltid')) return '/maltider'
   return null
+}
+
+function inboxCopy(activity) {
+  const who = activity.actor_name || 'Någon'
+  if (activity.entity === 'inköp') {
+    return { who, title: 'Inköpslistan uppdaterades', detail: activity.summary }
+  }
+  if (activity.action === 'klarade' || activity.action === 'slutförde') {
+    return { who, title: `Klarade: ${activity.summary}` }
+  }
+  if (isEventEntity(activity.entity)) {
+    return { who, title: `Ny händelse: ${activity.summary}` }
+  }
+  if (activity.entity === 'chatt') {
+    return { who, title: 'Nytt meddelande', detail: activity.summary }
+  }
+  if (activity.entity === 'dokument') {
+    return { who, title: `Nytt dokument: ${activity.summary}` }
+  }
+  if (isTodoEntity(activity.entity)) {
+    return { who, title: `Ny uppgift: ${activity.summary}` }
+  }
+  return { who, title: activity.summary || 'Ny aktivitet' }
 }
 
 function relativeTime(createdAt, now) {
@@ -46,11 +86,13 @@ function ActivityRow({ activity, now, reactions, user, pendingReactions, onToggl
   const offsetRef = useRef(0)
   const swiping = useRef(false)
   const link = activityLink(activity)
+  const copy = inboxCopy(activity)
 
   const textContent = (
     <>
-      <strong>{activity.actor_name || 'Någon'}</strong> {activity.action} {activity.entity}{' '}
-      <strong>{activity.summary}</strong>
+      <span className="activity-who">{copy.who}</span>
+      <span className="activity-title">{copy.title}</span>
+      {copy.detail ? <span className="activity-detail muted small">{copy.detail}</span> : null}
     </>
   )
 
@@ -241,6 +283,8 @@ export default function ActivityFeed() {
 
   const visibleActivities = activities
     .filter((activity) => !hiddenIds.has(activity.id))
+    .filter((activity) => !HIDDEN_ENTITIES.has(activity.entity))
+    .filter((activity) => !user?.id || activity.actor_id !== user.id)
     .slice(0, MAX_VISIBLE)
   const activityIds = visibleActivities.map((activity) => activity.id).join(',')
 
@@ -394,7 +438,7 @@ export default function ActivityFeed() {
     <section className="activity-section" aria-labelledby="activity-heading">
       <div className="activity-heading-row">
         <h2 id="activity-heading" className="activity-heading">
-          Familjeväggen
+          Nytt
         </h2>
         <p className="muted small activity-hint">Svep vänster för att gömma</p>
       </div>
@@ -405,8 +449,8 @@ export default function ActivityFeed() {
         {(!householdId || !loading) && !error && visibleActivities.length === 0 && (
           <EmptyState
             icon={Newspaper}
-            title="Ingen aktivitet än"
-            description="Familjens senaste aktivitet visas här."
+            title="Inget nytt"
+            description="När din partner gör något dyker det upp här."
           />
         )}
 

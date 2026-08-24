@@ -67,8 +67,26 @@
 }
 
 .activity-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
   margin: 0 0 0.15rem;
   overflow-wrap: anywhere;
+}
+
+.activity-who {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.activity-title {
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.activity-detail {
+  margin: 0;
 }
 
 a.activity-link {

@@ -192,6 +192,11 @@ input[type='color'] {
   gap: 0.65rem;
 }
 
+.cal-event.highlighted {
+  box-shadow: 0 0 0 2px var(--primary);
+  background: var(--soft-accent);
+}
+
 .cal-event-body {
   min-width: 0;
   flex: 1;

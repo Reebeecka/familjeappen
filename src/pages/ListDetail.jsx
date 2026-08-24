@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ListTodo, ShoppingCart, StickyNote, Trash2 } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
@@ -83,6 +83,7 @@ function ListItem({
   onAddSubtask,
   update,
   remove,
+  highlightId = null,
 }) {
   const [areSubtasksExpanded, setAreSubtasksExpanded] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
@@ -96,6 +97,13 @@ function ListItem({
   const showPriorityBadge = isTodo && priority !== 'normal'
   const canHaveSubtasks = !isSubtask && listType !== 'shopping'
   const hasEditor = isTodo || canHaveSubtasks
+  const highlighted = highlightId === item.id
+  const hasHighlightedSubtask = subtasks.some((subtask) => subtask.id === highlightId)
+
+  useEffect(() => {
+    if (hasHighlightedSubtask) setAreSubtasksExpanded(true)
+  }, [hasHighlightedSubtask])
+
   const itemClasses = [
     'list-item',
     'list-detail-item',
@@ -103,6 +111,7 @@ function ListItem({
     overdue ? 'overdue' : '',
     isTodo && item.priority === 'hög' ? 'high-priority' : '',
     isSubtask ? 'subtask' : '',
+    highlighted ? 'highlighted' : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -110,7 +119,10 @@ function ListItem({
   const itemNoun = isSubtask ? 'deluppgiften' : isShopping ? 'varan' : 'uppgiften'
 
   return (
-    <li className={isSubtask ? 'list-detail-subtask-entry' : 'list-detail-parent-entry'}>
+    <li
+      id={`list-item-${item.id}`}
+      className={isSubtask ? 'list-detail-subtask-entry' : 'list-detail-parent-entry'}
+    >
       <div className={itemClasses}>
         <div className="list-detail-item-content">
           <div className="list-detail-item-main">
@@ -324,6 +336,7 @@ function ListItem({
               membersById={membersById}
               membersLoading={membersLoading}
               isSubtask
+              highlightId={highlightId}
               update={update}
               remove={remove}
             />
@@ -336,6 +349,8 @@ function ListItem({
 
 export default function ListDetail() {
   const { listId } = useParams()
+  const [searchParams] = useSearchParams()
+  const highlightId = searchParams.get('item')
   const { householdId } = useAuth()
   const { members, loading: membersLoading } = useHouseholdMembers()
   const { items, loading, error, add, update, remove } = useListItems(listId)
@@ -374,6 +389,13 @@ export default function ListDetail() {
     })
     return groupedSubtasks
   }, [items])
+
+  useEffect(() => {
+    if (!highlightId || loading) return
+    const node = document.getElementById(`list-item-${highlightId}`)
+    if (!node) return
+    node.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [highlightId, loading, items])
 
   useEffect(() => {
     if (!listScopeKey) return
@@ -648,6 +670,7 @@ export default function ListDetail() {
             onAddSubtask={handleAddSubtask}
             update={update}
             remove={remove}
+            highlightId={highlightId}
           />
         ))}
       </ul>

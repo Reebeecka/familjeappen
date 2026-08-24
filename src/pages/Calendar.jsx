@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { CalendarDays, Trash2 } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
@@ -91,7 +92,7 @@ function formatTime(event) {
   return `${startText}–${endText}`
 }
 
-function EventItems({ events, remove }) {
+function EventItems({ events, remove, highlightId }) {
   const handleRemove = (event) => {
     if (
       !window.confirm(
@@ -105,7 +106,11 @@ function EventItems({ events, remove }) {
   return (
     <ul className="list">
       {events.map((event) => (
-        <li key={event.id} className="list-item cal-event">
+        <li
+          key={event.id}
+          id={`cal-event-${event.id}`}
+          className={`list-item cal-event${highlightId === event.id ? ' highlighted' : ''}`}
+        >
           <span
             className="cal-color-dot"
             style={{ backgroundColor: event.color || 'var(--primary)' }}
@@ -134,6 +139,8 @@ function EventItems({ events, remove }) {
 }
 
 export default function Calendar() {
+  const [searchParams] = useSearchParams()
+  const highlightEventId = searchParams.get('event')
   const { items, loading, error, add, remove } = useCollection('calendar_events', 'start_at')
   const {
     items: contacts,
@@ -165,6 +172,22 @@ export default function Calendar() {
       }, {}),
     [items],
   )
+
+  useEffect(() => {
+    if (!highlightEventId || items.length === 0) return
+    const event = items.find((item) => item.id === highlightEventId)
+    if (!event) return
+    const start = new Date(event.start_at)
+    setSelectedDate(toLocalInputDate(start))
+    setVisibleMonth(new Date(start.getFullYear(), start.getMonth(), 1))
+    setView('month')
+    window.setTimeout(() => {
+      document.getElementById(`cal-event-${event.id}`)?.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+      })
+    }, 80)
+  }, [highlightEventId, items])
 
   const birthdaysByMonthDay = useMemo(
     () =>
@@ -447,7 +470,9 @@ export default function Calendar() {
                 🎂 {contact.name} fyller år
               </p>
             ))}
-            {selectedEvents.length > 0 && <EventItems events={selectedEvents} remove={remove} />}
+            {selectedEvents.length > 0 && (
+              <EventItems events={selectedEvents} remove={remove} highlightId={highlightEventId} />
+            )}
             {selectedEvents.length === 0 &&
               selectedBirthdays.length === 0 &&
               !selectedHoliday && (
@@ -472,7 +497,11 @@ export default function Calendar() {
           {agendaDayKeys.map((dayKey) => (
             <div key={dayKey} className="cal-group">
               <h2 className="cal-day-heading">{formatDayHeading(dayKey)}</h2>
-              <EventItems events={agendaGroups[dayKey]} remove={remove} />
+              <EventItems
+                events={agendaGroups[dayKey]}
+                remove={remove}
+                highlightId={highlightEventId}
+              />
             </div>
           ))}
         </>

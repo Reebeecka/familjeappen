@@ -75,6 +75,11 @@
   opacity: 0.68;
 }
 
+.list-detail-item.highlighted {
+  box-shadow: 0 0 0 2px var(--primary);
+  background: var(--soft-accent);
+}
+
 .list-detail-item-content {
   display: flex;
   min-width: 0;
