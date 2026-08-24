@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BookOpen, Trash2 } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import { useAuth } from '../lib/AuthContext'
@@ -287,7 +288,7 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
               onClick={onDelete}
               aria-label={`Ta bort receptet ${recipe.title}`}
             >
-              🗑️
+              <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -461,7 +462,7 @@ export default function Recipes() {
   return (
     <div className="page">
       <div className="recipe-page-heading">
-        <h1 className="page-title">Receptbok 📖</h1>
+        <h1 className="page-title">Receptbok</h1>
         {!draftForm && (
           <button type="button" className="btn primary" onClick={openNewForm}>
             Nytt recept
@@ -506,7 +507,7 @@ export default function Recipes() {
       {loading && <Spinner />}
       {!loading && items.length === 0 && !draftForm && (
         <EmptyState
-          icon="📖"
+          icon={BookOpen}
           title="Inga recept"
           description="Lägg till ett recept eller importera ett från en länk."
         />

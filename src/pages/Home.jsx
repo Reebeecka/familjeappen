@@ -1,20 +1,32 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  ListTodo,
+  CalendarDays,
+  UtensilsCrossed,
+  Wallet,
+  BookOpen,
+  Folder,
+  Sun,
+  Utensils,
+  CloudSun,
+} from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import ActivityFeed from '../components/ActivityFeed'
+import Avatar from '../components/Avatar'
 import EmptyState from '../components/EmptyState'
 import NotificationButton from '../components/NotificationButton'
 import Spinner from '../components/Spinner'
 import './Home.css'
 
 const QUICK_LINKS = [
-  { to: '/listor', label: 'Listor', icon: '📝' },
-  { to: '/kalender', label: 'Kalender', icon: '📅' },
-  { to: '/maltider', label: 'Måltider', icon: '🍽️' },
-  { to: '/budget', label: 'Budget', icon: '💰' },
-  { to: '/recept', label: 'Recept', icon: '📖' },
-  { to: '/dokument', label: 'Dokument', icon: '📁' },
+  { to: '/listor', label: 'Listor', icon: ListTodo },
+  { to: '/kalender', label: 'Kalender', icon: CalendarDays },
+  { to: '/maltider', label: 'Måltider', icon: UtensilsCrossed },
+  { to: '/budget', label: 'Budget', icon: Wallet },
+  { to: '/recept', label: 'Recept', icon: BookOpen },
+  { to: '/dokument', label: 'Dokument', icon: Folder },
 ]
 
 const MEAL_LABELS = {
@@ -112,13 +124,7 @@ export default function Home() {
   return (
     <div className="page home-page">
       <header className="home-greeting">
-        <span
-          className="home-avatar"
-          style={{ '--avatar-color': profile?.color || 'var(--primary)' }}
-          aria-hidden="true"
-        >
-          {profile?.avatar || '👋'}
-        </span>
+        <Avatar profile={profile} size={58} className="home-avatar" />
         <div className="home-greeting-copy">
           <p className="muted small home-eyebrow">Välkommen till familjens samlingsplats</p>
           <h1 className="page-title">
@@ -136,7 +142,7 @@ export default function Home() {
             </h2>
           </div>
           <span className="today-heading-icon" aria-hidden="true">
-            ☀️
+            <Sun size={22} strokeWidth={1.75} />
           </span>
         </div>
 
@@ -145,7 +151,7 @@ export default function Home() {
         {!todayLoading && !todayError && todayEvents.length === 0 && todayMeals.length === 0 && (
           <div className="today-empty-state">
             <EmptyState
-              icon="🌤️"
+              icon={CloudSun}
               title="Inget planerat idag"
               description="Njut av en lugn dag tillsammans."
             />
@@ -156,7 +162,7 @@ export default function Home() {
           <div className="today-columns">
             <div className="today-group">
               <h3 className="today-subheading">
-                <span aria-hidden="true">📅</span>
+                <CalendarDays size={15} strokeWidth={2} aria-hidden="true" />
                 Kalender
               </h3>
               {todayEvents.length === 0 ? (
@@ -181,7 +187,7 @@ export default function Home() {
             </div>
             <div className="today-group">
               <h3 className="today-subheading">
-                <span aria-hidden="true">🍽️</span>
+                <UtensilsCrossed size={15} strokeWidth={2} aria-hidden="true" />
                 Måltider
               </h3>
               {todayMeals.length === 0 ? (
@@ -191,7 +197,7 @@ export default function Home() {
                   {todayMeals.map((meal) => (
                     <li key={meal.id}>
                       <span className="today-meal-icon" aria-hidden="true">
-                        🍴
+                        <Utensils size={15} strokeWidth={2} />
                       </span>
                       <span className="today-item-copy">
                         <span className="today-event-time">
@@ -220,14 +226,17 @@ export default function Home() {
           <span className="muted small">Allt på ett tryck</span>
         </div>
         <div className="dashboard-grid home-links">
-          {QUICK_LINKS.map((item) => (
-            <Link to={item.to} className="card dash-card home-link" key={item.to}>
-              <span className="dash-icon home-link-icon" aria-hidden="true">
-                {item.icon}
-              </span>
-              <span className="dash-label">{item.label}</span>
-            </Link>
-          ))}
+          {QUICK_LINKS.map((item) => {
+            const Icon = item.icon
+            return (
+              <Link to={item.to} className="card dash-card home-link" key={item.to}>
+                <span className="dash-icon home-link-icon" aria-hidden="true">
+                  <Icon size={24} strokeWidth={1.75} />
+                </span>
+                <span className="dash-label">{item.label}</span>
+              </Link>
+            )
+          })}
         </div>
       </section>
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Newspaper } from 'lucide-react'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 import EmptyState from './EmptyState'
@@ -246,7 +247,7 @@ export default function ActivityFeed() {
         {error && <p className="error activity-message">{error}</p>}
         {(!householdId || !loading) && !error && activities.length === 0 && (
           <EmptyState
-            icon="📣"
+            icon={Newspaper}
             title="Ingen aktivitet än"
             description="Familjens senaste aktivitet visas här."
           />

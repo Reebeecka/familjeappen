@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  BookOpen,
+  CalendarDays,
+  Contact,
+  Folder,
+  ListTodo,
+  Search as SearchIcon,
+} from 'lucide-react'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 import EmptyState from '../components/EmptyState'
@@ -10,7 +18,7 @@ const SEARCH_GROUPS = [
   {
     key: 'listItems',
     title: 'Listor',
-    icon: '📋',
+    icon: ListTodo,
     table: 'list_items',
     select: 'id, title, list_id',
     column: 'title',
@@ -20,7 +28,7 @@ const SEARCH_GROUPS = [
   {
     key: 'calendarEvents',
     title: 'Kalender',
-    icon: '📅',
+    icon: CalendarDays,
     table: 'calendar_events',
     select: 'id, title, start_at',
     column: 'title',
@@ -30,7 +38,7 @@ const SEARCH_GROUPS = [
   {
     key: 'contacts',
     title: 'Kontakter',
-    icon: '📇',
+    icon: Contact,
     table: 'contacts',
     select: 'id, name',
     column: 'name',
@@ -40,7 +48,7 @@ const SEARCH_GROUPS = [
   {
     key: 'recipes',
     title: 'Recept',
-    icon: '📖',
+    icon: BookOpen,
     table: 'recipes',
     select: 'id, title',
     column: 'title',
@@ -50,7 +58,7 @@ const SEARCH_GROUPS = [
   {
     key: 'documents',
     title: 'Dokument',
-    icon: '📁',
+    icon: Folder,
     table: 'documents',
     select: 'id, name',
     column: 'name',
@@ -154,7 +162,7 @@ export default function Search() {
 
       {!hasSearched && !loading && (
         <EmptyState
-          icon="🔍"
+          icon={SearchIcon}
           title="Vad letar du efter?"
           description="Skriv något för att söka i familjens innehåll."
         />
@@ -162,7 +170,7 @@ export default function Search() {
 
       {hasSearched && !loading && visibleGroups.length === 0 && (
         <EmptyState
-          icon="🔍"
+          icon={SearchIcon}
           title={`Inga träffar på ”${debouncedSearch}”`}
           description="Prova ett annat eller kortare sökord."
         />
@@ -170,10 +178,12 @@ export default function Search() {
 
       {hasSearched && !loading && (
         <div className="search-groups">
-          {visibleGroups.map((group) => (
+          {visibleGroups.map((group) => {
+            const GroupIcon = group.icon
+            return (
             <section key={group.key} className="search-group">
               <h2 className="search-group-title">
-                <span aria-hidden="true">{group.icon}</span>
+                <GroupIcon size={18} strokeWidth={1.75} aria-hidden="true" />
                 {group.title}
                 <span className="search-count">{results[group.key].length}</span>
               </h2>
@@ -188,7 +198,8 @@ export default function Search() {
                 ))}
               </ul>
             </section>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

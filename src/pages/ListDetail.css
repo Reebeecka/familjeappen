@@ -9,6 +9,17 @@
   overflow-wrap: anywhere;
 }
 
+.list-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.list-detail-title-icon {
+  flex: 0 0 auto;
+  color: var(--primary);
+}
+
 .list-detail-back {
   align-self: flex-start;
   color: var(--primary);

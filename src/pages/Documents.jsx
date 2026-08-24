@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Download, Folder, Trash2 } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import './Documents.css'
@@ -236,7 +237,7 @@ export default function Documents() {
 
   return (
     <div className="page">
-      <h1 className="page-title">Dokument 📁</h1>
+      <h1 className="page-title">Dokument</h1>
 
       <div className="card doc-upload">
         <p className="muted">Ladda upp kvitton, avtal och andra viktiga filer.</p>
@@ -273,7 +274,7 @@ export default function Documents() {
       {loading && <Spinner />}
       {!loading && items.length === 0 && (
         <EmptyState
-          icon="📁"
+          icon={Folder}
           title="Inga dokument"
           description="Ladda upp ett dokument för att komma igång."
         />
@@ -298,7 +299,7 @@ export default function Documents() {
 
           {filteredItems.length === 0 && (
             <EmptyState
-              icon="📁"
+              icon={Folder}
               title="Mappen är tom"
               description="Det finns inga dokument i den valda mappen."
             />
@@ -349,7 +350,7 @@ export default function Documents() {
                             aria-label={`Ladda ner ${doc.name}`}
                             title="Ladda ner"
                           >
-                            ⬇️
+                            <Download size={18} strokeWidth={1.75} aria-hidden="true" />
                           </button>
                           <button
                             type="button"
@@ -359,7 +360,7 @@ export default function Documents() {
                             aria-label={`Ta bort dokumentet ${doc.name}`}
                             title="Ta bort"
                           >
-                            🗑️
+                            <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />
                           </button>
                         </div>
                       </div>

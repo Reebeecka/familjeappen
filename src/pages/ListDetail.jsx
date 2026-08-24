@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { ListTodo, ShoppingCart, StickyNote, Trash2 } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import { useAuth } from '../lib/AuthContext'
 import { useHouseholdMembers } from '../lib/useHouseholdMembers'
+import { ListIcon } from '../lib/listIcons'
 import { isListItemOverdue, useListItems } from '../lib/useListItems'
 import { supabase } from '../lib/supabase'
 import './ListDetail.css'
@@ -306,7 +308,7 @@ function ListItem({
           }}
           aria-label={`Ta bort ${itemNoun} ${item.title}`}
         >
-          🗑️
+          <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </div>
 
@@ -510,7 +512,7 @@ export default function ListDetail() {
 
   const itemLabel = isShopping ? 'Vara' : isSimple ? 'Punkt' : 'Uppgift'
   const itemPlaceholder = isShopping ? 'Ny vara…' : isSimple ? 'Ny punkt…' : 'Ny uppgift…'
-  const fallbackIcon = isShopping ? '🛒' : isSimple ? '🗒️' : '✅'
+  const EmptyIcon = isShopping ? ShoppingCart : isSimple ? StickyNote : ListTodo
   const emptyTitle = isShopping
     ? 'Inköpslistan är tom'
     : isSimple
@@ -526,8 +528,14 @@ export default function ListDetail() {
         <Link to="/listor" className="list-detail-back">
           ← Listor
         </Link>
-        <h1 className="page-title">
-          {list.icon || fallbackIcon} {list.name}
+        <h1 className="page-title list-detail-title">
+          <ListIcon
+            icon={list.icon}
+            type={listType}
+            size={22}
+            className="list-detail-title-icon"
+          />
+          {list.name}
         </h1>
       </header>
 
@@ -618,7 +626,7 @@ export default function ListDetail() {
       {(error || listError) && <p className="error">{error || listError}</p>}
       {loading && <Spinner />}
       {!loading && items.length === 0 && (
-        <EmptyState icon={fallbackIcon} title={emptyTitle} description={emptyDescription} />
+        <EmptyState icon={EmptyIcon} title={emptyTitle} description={emptyDescription} />
       )}
 
       <ul className="list list-detail-list">

@@ -48,8 +48,65 @@
 }
 
 .lists-card-icon {
-  font-size: 1.65rem;
-  line-height: 1;
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--soft-accent);
+  color: var(--primary);
+}
+
+.lists-icon-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.lists-icon-picker legend {
+  margin-bottom: 0.4rem;
+  padding: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.lists-icon-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.lists-icon-option {
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    color 140ms ease,
+    background-color 140ms ease;
+}
+
+.lists-icon-option:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.lists-icon-option.selected {
+  border-color: var(--primary);
+  background: var(--soft-accent);
+  color: var(--primary);
+}
+
+.lists-icon-option:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
 }
 
 .lists-card-content {

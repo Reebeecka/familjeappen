@@ -10,21 +10,6 @@
   border-bottom: 1px solid var(--border);
 }
 
-.profile-avatar {
-  display: grid;
-  width: 3.5rem;
-  height: 3.5rem;
-  flex: 0 0 auto;
-  place-items: center;
-  overflow: hidden;
-  border: 3px solid var(--profile-color);
-  border-radius: 50%;
-  background: var(--surface);
-  font-size: 1.65rem;
-  font-weight: 750;
-  line-height: 1;
-}
-
 .profile-preview-name {
   margin: 0;
   font-size: 1.1rem;
@@ -93,4 +78,33 @@
 .profile-form .error,
 .profile-form .info {
   margin: 0;
+}
+
+.profile-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.profile-photo-button,
+.profile-photo-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.profile-photo-remove {
+  color: var(--danger);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

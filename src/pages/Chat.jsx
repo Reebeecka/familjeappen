@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { MessageCircle } from 'lucide-react'
 import { useAuth } from '../lib/AuthContext'
 import { useHouseholdMembers } from '../lib/useHouseholdMembers'
 import { supabase } from '../lib/supabase'
+import Avatar from '../components/Avatar'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import './Chat.css'
@@ -189,7 +191,7 @@ export default function Chat() {
           )}
           {!loading && !error && messages.length === 0 && (
             <EmptyState
-              icon="💬"
+              icon={MessageCircle}
               title="Inga meddelanden än"
               description="Skriv det första meddelandet till familjen."
             />
@@ -208,11 +210,11 @@ export default function Chat() {
                 key={message.id}
               >
                 <div className="chat-message-meta">
+                  <Avatar profile={isOwnMessage ? profile ?? sender : sender} size={22} />
                   <span
                     className="chat-sender"
                     style={sender?.color ? { color: sender.color } : undefined}
                   >
-                    {sender?.avatar && <span aria-hidden="true">{sender.avatar} </span>}
                     {senderName}
                   </span>
                   <time dateTime={message.created_at}>

@@ -111,6 +111,20 @@ export function AuthProvider({ children }) {
     if (supabase) await supabase.auth.signOut()
   }
 
+  const refreshProfile = async () => {
+    if (!supabase || !session?.user) return
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single()
+    if (error) {
+      console.error('Kunde inte uppdatera användarprofil:', error)
+      return
+    }
+    setProfile(data)
+  }
+
   const value = {
     session,
     user: session?.user ?? null,
@@ -119,6 +133,7 @@ export function AuthProvider({ children }) {
     householdId: profile?.household_id ?? null,
     loading,
     signOut,
+    refreshProfile,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

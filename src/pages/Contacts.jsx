@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Contact, Pencil, Trash2 } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import { useCollection } from '../lib/useCollection'
@@ -91,7 +92,7 @@ export default function Contacts() {
 
   return (
     <div className="page">
-      <h1 className="page-title">Kontakter 📇</h1>
+      <h1 className="page-title">Kontakter</h1>
 
       <input
         type="text"
@@ -166,7 +167,7 @@ export default function Contacts() {
       {loading && <Spinner />}
       {!loading && filtered.length === 0 && (
         <EmptyState
-          icon="📇"
+          icon={Contact}
           title={debouncedSearch.trim() ? 'Inga sökträffar' : 'Inga kontakter'}
           description={
             debouncedSearch.trim()
@@ -275,7 +276,7 @@ export default function Contacts() {
                     onClick={() => startEdit(contact)}
                     aria-label={`Redigera kontakten ${contact.name}`}
                   >
-                    ✏️
+                    <Pencil size={18} strokeWidth={1.75} aria-hidden="true" />
                   </button>
                   <button
                     type="button"
@@ -291,7 +292,7 @@ export default function Contacts() {
                     }}
                     aria-label={`Ta bort kontakten ${contact.name}`}
                   >
-                    🗑️
+                    <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />
                   </button>
                 </div>
               </div>

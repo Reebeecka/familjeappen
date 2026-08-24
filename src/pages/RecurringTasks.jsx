@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Repeat } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import { useCollection } from '../lib/useCollection'
@@ -131,7 +132,7 @@ export default function RecurringTasks() {
       {loading && <Spinner />}
       {!loading && items.length === 0 && (
         <EmptyState
-          icon="🔁"
+          icon={Repeat}
           title="Inga återkommande uppgifter"
           description="Lägg till en uppgift som ska upprepas automatiskt."
         />

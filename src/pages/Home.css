@@ -10,17 +10,7 @@
 }
 
 .home-avatar {
-  display: grid;
-  width: 3.6rem;
-  height: 3.6rem;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 2px solid var(--avatar-color);
-  border-radius: 50%;
-  background: var(--soft-accent);
   box-shadow: 0 0 0 4px var(--surface);
-  font-size: 1.7rem;
-  line-height: 1;
 }
 
 .home-greeting-copy {
@@ -182,11 +172,6 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 1.25rem;
-}
-
-.home-wall .activity-heading::before {
-  content: '💬';
-  font-size: 1.05rem;
 }
 
 .home-wall .activity-card {

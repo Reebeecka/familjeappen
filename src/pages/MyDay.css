@@ -40,6 +40,9 @@
 .my-day-section-heading h2 {
   margin: 0;
   font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .my-day-count {

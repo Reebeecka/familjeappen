@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { CalendarDays, ListTodo, Sunrise, UtensilsCrossed } from 'lucide-react'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 import EmptyState from '../components/EmptyState'
@@ -157,7 +158,7 @@ export default function MyDay() {
     <div className="page">
       <header className="my-day-header">
         <div>
-          <h1 className="page-title">Min dag 🌅</h1>
+          <h1 className="page-title">Min dag</h1>
           <p className="muted">
             {formatToday(today)}
             {profile?.display_name ? ` · ${profile.display_name}` : ''}
@@ -170,7 +171,7 @@ export default function MyDay() {
 
       {!loading && isEmpty && (
         <EmptyState
-          icon="🌅"
+          icon={Sunrise}
           title="Inget planerat för idag"
           description="Du har en lugn dag framför dig."
         />
@@ -180,12 +181,14 @@ export default function MyDay() {
         <div className="my-day-sections">
           <section className="card my-day-section">
             <div className="my-day-section-heading">
-              <h2>✅ Mina listpunkter</h2>
+              <h2>
+                <ListTodo size={18} strokeWidth={1.75} aria-hidden="true" /> Mina listpunkter
+              </h2>
               <span className="my-day-count">{tasks.length}</span>
             </div>
             {tasks.length === 0 ? (
               <EmptyState
-                icon="✅"
+                icon={ListTodo}
                 title="Inga listpunkter"
                 description="Du har inga öppna listpunkter tilldelade till dig."
               />
@@ -212,12 +215,14 @@ export default function MyDay() {
 
           <section className="card my-day-section">
             <div className="my-day-section-heading">
-              <h2>📅 Kalender</h2>
+              <h2>
+                <CalendarDays size={18} strokeWidth={1.75} aria-hidden="true" /> Kalender
+              </h2>
               <span className="my-day-count">{events.length}</span>
             </div>
             {events.length === 0 ? (
               <EmptyState
-                icon="📅"
+                icon={CalendarDays}
                 title="Inga kalenderhändelser"
                 description="Det finns inga kalenderhändelser idag."
               />
@@ -240,12 +245,14 @@ export default function MyDay() {
 
           <section className="card my-day-section">
             <div className="my-day-section-heading">
-              <h2>🍽️ Måltider</h2>
+              <h2>
+                <UtensilsCrossed size={18} strokeWidth={1.75} aria-hidden="true" /> Måltider
+              </h2>
               <span className="my-day-count">{meals.length}</span>
             </div>
             {meals.length === 0 ? (
               <EmptyState
-                icon="🍽️"
+                icon={UtensilsCrossed}
                 title="Inga måltider planerade"
                 description="Det finns inga måltider planerade idag."
               />

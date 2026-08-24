@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Trash2, Wallet } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import { useAuth } from '../lib/AuthContext'
@@ -268,7 +269,7 @@ export default function Budget() {
 
   return (
     <div className="page">
-      <h1 className="page-title">Budget 💰</h1>
+      <h1 className="page-title">Budget</h1>
 
       <div className="budget-month-picker" aria-label="Välj månad">
         <button
@@ -483,7 +484,7 @@ export default function Budget() {
       {(loading || goalsLoading) && <Spinner />}
       {!loading && monthlyEntries.length === 0 && (
         <EmptyState
-          icon="💰"
+          icon={Wallet}
           title="Inga budgetposter"
           description="Det finns inga poster för den här månaden."
         />
@@ -523,7 +524,7 @@ export default function Budget() {
                     entry.category || (entry.kind === 'inkomst' ? 'inkomst' : 'utgift')
                   }`}
                 >
-                  🗑️
+                  <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />
                 </button>
               </div>
               {entryCurrency !== baseCurrency && (

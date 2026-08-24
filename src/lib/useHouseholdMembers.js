@@ -3,7 +3,7 @@ import { useAuth } from './AuthContext'
 import { supabase } from './supabase'
 
 // Returnerar { members, loading }
-// members: array av { id, display_name, color, avatar }
+// members: array av { id, display_name, color, avatar, avatar_url }
 export function useHouseholdMembers() {
   const { householdId } = useAuth()
   const [result, setResult] = useState({ householdId: null, members: [] })
@@ -16,7 +16,7 @@ export function useHouseholdMembers() {
     const loadMembers = async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('id, display_name, color, avatar')
+        .select('id, display_name, color, avatar, avatar_url')
         .eq('household_id', householdId)
 
       if (!active) return

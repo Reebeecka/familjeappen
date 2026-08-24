@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { CalendarDays, Trash2 } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import { useCollection } from '../lib/useCollection'
@@ -124,7 +125,7 @@ function EventItems({ events, remove }) {
             onClick={() => handleRemove(event)}
             aria-label={`Ta bort kalenderhändelsen ${event.title}`}
           >
-            🗑️
+            <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </li>
       ))}
@@ -275,7 +276,7 @@ export default function Calendar() {
 
   return (
     <div className="page">
-      <h1 className="page-title">Kalender 📅</h1>
+      <h1 className="page-title">Kalender</h1>
 
       <form onSubmit={handleAdd} className="form card">
         <label>
@@ -451,7 +452,7 @@ export default function Calendar() {
               selectedBirthdays.length === 0 &&
               !selectedHoliday && (
                 <EmptyState
-                  icon="📅"
+                  icon={CalendarDays}
                   title="Inget planerat"
                   description="Det finns inga händelser den här dagen."
                 />
@@ -463,7 +464,7 @@ export default function Calendar() {
           {loading && <Spinner />}
           {!loading && agendaDayKeys.length === 0 && (
             <EmptyState
-              icon="📅"
+              icon={CalendarDays}
               title="Inga kommande händelser"
               description="Lägg till en händelse för att börja planera."
             />

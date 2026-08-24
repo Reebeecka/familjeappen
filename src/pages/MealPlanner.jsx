@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { UtensilsCrossed } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import { useCollection } from '../lib/useCollection'
@@ -78,7 +79,7 @@ export default function MealPlanner() {
       {loading && <Spinner />}
       {!loading && items.length === 0 && (
         <EmptyState
-          icon="🍽️"
+          icon={UtensilsCrossed}
           title="Inga måltider planerade"
           description="Lägg till en måltid i veckoplaneringen nedan."
         />

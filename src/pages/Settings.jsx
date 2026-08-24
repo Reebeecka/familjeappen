@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { Users } from 'lucide-react'
+import Avatar from '../components/Avatar'
 import EmptyState from '../components/EmptyState'
 import NotificationButton from '../components/NotificationButton'
 import Spinner from '../components/Spinner'
@@ -278,13 +280,7 @@ export default function Settings() {
             <ul className="member-list">
               {members.map((member) => (
                 <li className="member-row" key={member.id}>
-                  <span
-                    className="member-avatar"
-                    style={{ '--member-color': member.color || 'var(--primary)' }}
-                    aria-hidden="true"
-                  >
-                    {member.avatar || '👤'}
-                  </span>
+                  <Avatar profile={member} size={40} />
                   <span className="member-name">
                     {member.display_name || 'Namnlös medlem'}
                     {member.id === profile?.id && <span className="muted small"> (du)</span>}
@@ -296,7 +292,7 @@ export default function Settings() {
 
           {!membersLoading && members.length === 0 && (
             <EmptyState
-              icon="👥"
+              icon={Users}
               title="Inga medlemmar"
               description="Inga hushållsmedlemmar hittades."
             />
