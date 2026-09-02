@@ -12,6 +12,7 @@ import {
   Folder,
   UserRound,
   Settings,
+  Trophy,
 } from 'lucide-react'
 
 const menuItems = [
@@ -19,6 +20,7 @@ const menuItems = [
   { to: '/sok', icon: Search, label: 'Sök' },
   { to: '/chatt', icon: MessageCircle, label: 'Chatt' },
   { to: '/kalender', icon: CalendarDays, label: 'Kalender' },
+  { to: '/rugby', icon: Trophy, label: 'Rugby' },
   { to: '/maltider', icon: UtensilsCrossed, label: 'Måltider' },
   { to: '/aterkommande', icon: Repeat, label: 'Återkommande' },
   { to: '/recept', icon: BookOpen, label: 'Recept' },

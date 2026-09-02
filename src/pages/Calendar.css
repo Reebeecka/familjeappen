@@ -214,6 +214,17 @@ input[type='color'] {
   font-weight: 600;
 }
 
+.cal-rugby-tickets {
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.cal-rugby-tickets:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 420px) {
   .cal-month {
     padding: 0.55rem;

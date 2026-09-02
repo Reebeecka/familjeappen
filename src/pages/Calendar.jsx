@@ -4,6 +4,14 @@ import { CalendarDays, Trash2 } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
 import { useCollection } from '../lib/useCollection'
+import { useRugbyMatches } from '../lib/useRugbyMatches'
+import {
+  RUGBY_EVENT_COLOR,
+  formatKickoffTime,
+  matchTitle,
+  ticketUrlForMatch,
+  venueForMatch,
+} from '../lib/rugbyClubs'
 import './Calendar.css'
 
 const CATEGORY_OPTIONS = [
@@ -138,6 +146,43 @@ function EventItems({ events, remove, highlightId }) {
   )
 }
 
+function RugbyItems({ matches }) {
+  return (
+    <ul className="list">
+      {matches.map((match) => {
+        const tickets = ticketUrlForMatch(match)
+        const venue = venueForMatch(match)
+        return (
+          <li key={match.api_id} className="list-item cal-event">
+            <span
+              className="cal-color-dot"
+              style={{ backgroundColor: RUGBY_EVENT_COLOR }}
+              aria-hidden="true"
+            />
+            <div className="cal-event-body">
+              <span className="cal-event-time">
+                {formatKickoffTime(match)} · {match.league_name}
+              </span>
+              <span className="cal-event-title">{matchTitle(match)}</span>
+              {venue && <span className="muted small">{venue}</span>}
+              {tickets && (
+                <a
+                  className="cal-rugby-tickets"
+                  href={tickets}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Köp biljett
+                </a>
+              )}
+            </div>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 export default function Calendar() {
   const [searchParams] = useSearchParams()
   const highlightEventId = searchParams.get('event')
@@ -147,6 +192,15 @@ export default function Calendar() {
     loading: contactsLoading,
     error: contactsError,
   } = useCollection('contacts')
+  const rugbyRange = useMemo(() => {
+    const from = new Date()
+    from.setDate(from.getDate() - 14)
+    from.setHours(0, 0, 0, 0)
+    const to = new Date()
+    to.setFullYear(to.getFullYear() + 1)
+    return { from: from.toISOString(), to: to.toISOString() }
+  }, [])
+  const { items: rugbyMatches } = useRugbyMatches(rugbyRange.from, rugbyRange.to)
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(toLocalInputDate(new Date()))
   const [time, setTime] = useState('')
@@ -171,6 +225,17 @@ export default function Calendar() {
         return groups
       }, {}),
     [items],
+  )
+
+  const rugbyByDate = useMemo(
+    () =>
+      rugbyMatches.reduce((groups, match) => {
+        const dateKey = toLocalInputDate(new Date(match.kickoff_at))
+        if (!groups[dateKey]) groups[dateKey] = []
+        groups[dateKey].push(match)
+        return groups
+      }, {}),
+    [rugbyMatches],
   )
 
   useEffect(() => {
@@ -230,6 +295,9 @@ export default function Calendar() {
   const selectedEvents = [...(eventsByDate[selectedDate] ?? [])].sort(
     (a, b) => new Date(a.start_at) - new Date(b.start_at),
   )
+  const selectedRugby = [...(rugbyByDate[selectedDate] ?? [])].sort(
+    (a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at),
+  )
   const selectedBirthdays = birthdaysByMonthDay[selectedDate.slice(5)] ?? []
   const selectedHoliday = holidays.get(selectedDate)
 
@@ -247,7 +315,18 @@ export default function Calendar() {
     groups[dateKey].push(event)
     return groups
   }, {})
-  const agendaDayKeys = Object.keys(agendaGroups).sort()
+  const upcomingRugby = rugbyMatches.filter(
+    (match) => new Date(match.kickoff_at) >= todayStart,
+  )
+  const rugbyAgendaByDate = upcomingRugby.reduce((groups, match) => {
+    const dateKey = toLocalInputDate(new Date(match.kickoff_at))
+    if (!groups[dateKey]) groups[dateKey] = []
+    groups[dateKey].push(match)
+    return groups
+  }, {})
+  const agendaDayKeys = [
+    ...new Set([...Object.keys(agendaGroups), ...Object.keys(rugbyAgendaByDate)]),
+  ].sort()
 
   const handleAdd = async (event) => {
     event.preventDefault()
@@ -426,6 +505,7 @@ export default function Calendar() {
             <div className="cal-grid">
               {monthCells.map(({ date: cellDate, dateKey, isCurrentMonth }) => {
                 const dayEvents = eventsByDate[dateKey] ?? []
+                const dayRugby = rugbyByDate[dateKey] ?? []
                 const dayBirthdays = birthdaysByMonthDay[dateKey.slice(5)] ?? []
                 const holiday = holidays.get(dateKey)
                 return (
@@ -446,13 +526,19 @@ export default function Calendar() {
                   >
                     <span className="cal-day-number">{cellDate.getDate()}</span>
                     <span className="cal-day-dots" aria-hidden="true">
-                      {dayEvents.slice(0, 3).map((dayEvent) => (
+                      {dayEvents.slice(0, 2).map((dayEvent) => (
                         <span
                           key={dayEvent.id}
                           className="cal-color-dot"
                           style={{ backgroundColor: dayEvent.color || 'var(--primary)' }}
                         />
                       ))}
+                      {dayRugby.length > 0 && (
+                        <span
+                          className="cal-color-dot"
+                          style={{ backgroundColor: RUGBY_EVENT_COLOR }}
+                        />
+                      )}
                       {dayBirthdays.length > 0 && <span className="cal-birthday-dot">🎂</span>}
                     </span>
                     {holiday && <span className="cal-holiday-label">{holiday}</span>}
@@ -473,7 +559,9 @@ export default function Calendar() {
             {selectedEvents.length > 0 && (
               <EventItems events={selectedEvents} remove={remove} highlightId={highlightEventId} />
             )}
+            {selectedRugby.length > 0 && <RugbyItems matches={selectedRugby} />}
             {selectedEvents.length === 0 &&
+              selectedRugby.length === 0 &&
               selectedBirthdays.length === 0 &&
               !selectedHoliday && (
                 <EmptyState
@@ -497,11 +585,16 @@ export default function Calendar() {
           {agendaDayKeys.map((dayKey) => (
             <div key={dayKey} className="cal-group">
               <h2 className="cal-day-heading">{formatDayHeading(dayKey)}</h2>
-              <EventItems
-                events={agendaGroups[dayKey]}
-                remove={remove}
-                highlightId={highlightEventId}
-              />
+              {(agendaGroups[dayKey] ?? []).length > 0 && (
+                <EventItems
+                  events={agendaGroups[dayKey]}
+                  remove={remove}
+                  highlightId={highlightEventId}
+                />
+              )}
+              {(rugbyAgendaByDate[dayKey] ?? []).length > 0 && (
+                <RugbyItems matches={rugbyAgendaByDate[dayKey]} />
+              )}
             </div>
           ))}
         </>

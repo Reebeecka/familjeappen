@@ -1,0 +1,87 @@
+.rugby-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.rugby-header .page-title {
+  margin: 0;
+}
+
+.rugby-header .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.rugby-clubs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.rugby-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.28rem 0.6rem;
+  color: var(--text);
+  background: var(--soft-accent);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.rugby-chip-league {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.rugby-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.rugby-heading {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.rugby-match {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
+.rugby-match-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.rugby-match-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.rugby-match-score {
+  margin: 0;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.rugby-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.rugby-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}

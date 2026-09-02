@@ -19,6 +19,7 @@ import Chat from './pages/Chat'
 import Search from './pages/Search'
 import MyDay from './pages/MyDay'
 import Settings from './pages/Settings'
+import Rugby from './pages/Rugby'
 import Layout from './components/Layout'
 
 export default function App() {
@@ -75,6 +76,7 @@ export default function App() {
         <Route path="/sok" element={<Search />} />
         <Route path="/min-dag" element={<MyDay />} />
         <Route path="/installningar" element={<Settings />} />
+        <Route path="/rugby" element={<Rugby />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

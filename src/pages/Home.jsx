@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, Sun, Utensils, UtensilsCrossed } from 'lucide-react'
+import { CalendarDays, Sun, Trophy, Utensils, UtensilsCrossed } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import ActivityFeed from '../components/ActivityFeed'
 import Avatar from '../components/Avatar'
 import Spinner from '../components/Spinner'
+import { useRugbyMatches } from '../lib/useRugbyMatches'
+import { formatMatchWhen, matchTitle } from '../lib/rugbyClubs'
 import './Home.css'
 
 const MEAL_LABELS = {
@@ -44,6 +46,14 @@ export default function Home() {
   const [todayMeals, setTodayMeals] = useState([])
   const [todayLoading, setTodayLoading] = useState(true)
   const [todayError, setTodayError] = useState(null)
+  const rugbyWeek = useMemo(() => {
+    const from = new Date()
+    from.setHours(0, 0, 0, 0)
+    const to = new Date(from)
+    to.setDate(to.getDate() + 8)
+    return { from: from.toISOString(), to: to.toISOString() }
+  }, [])
+  const { items: weekRugby, error: rugbyError } = useRugbyMatches(rugbyWeek.from, rugbyWeek.to)
 
   useEffect(() => {
     if (!householdId) return
@@ -156,6 +166,32 @@ export default function Home() {
           </ul>
         )}
       </section>
+
+      {!rugbyError && weekRugby.length > 0 && (
+        <section className="card today-card" aria-labelledby="rugby-heading">
+          <div className="today-header">
+            <h2 id="rugby-heading" className="home-section-heading">
+              Rugby i veckan
+            </h2>
+            <Trophy size={18} strokeWidth={1.75} aria-hidden="true" />
+          </div>
+          <ul className="today-list">
+            {weekRugby.map((match) => (
+              <li key={match.api_id}>
+                <Link to="/rugby" className="today-row">
+                  <span className="today-meal-icon" aria-hidden="true">
+                    <Trophy size={14} strokeWidth={2} />
+                  </span>
+                  <span className="today-item-copy">
+                    <span className="today-event-time">{formatMatchWhen(match)}</span>
+                    <strong className="today-item-title">{matchTitle(match)}</strong>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <ActivityFeed />
     </div>
