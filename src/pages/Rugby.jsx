@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarPlus, ExternalLink, RefreshCw, Trophy } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
@@ -80,8 +80,11 @@ export default function Rugby() {
   const { items: calendarEvents, add } = useCollection('calendar_events', 'start_at')
   const [syncing, setSyncing] = useState(false)
   const [syncMessage, setSyncMessage] = useState('')
+  const [syncFailed, setSyncFailed] = useState(false)
   const [addingId, setAddingId] = useState(null)
   const [addError, setAddError] = useState('')
+  const syncingRef = useRef(false)
+  const autoSyncStarted = useRef(false)
 
   const todayStart = useMemo(() => {
     const start = new Date()
@@ -93,29 +96,41 @@ export default function Rugby() {
     .filter((match) => new Date(match.kickoff_at).getTime() < todayStart)
     .reverse()
 
-  const handleSync = async () => {
-    if (syncing || !supabase) return
+  const handleSync = useCallback(async () => {
+    if (syncingRef.current || !supabase) return
+    syncingRef.current = true
     setSyncing(true)
     setSyncMessage('')
+    setSyncFailed(false)
     const { data, error: invokeError } = await supabase.functions.invoke('sync-rugby', {
       body: {},
     })
-    if (invokeError || data?.success === false) {
-      setSyncMessage(data?.error?.message || 'Kunde inte hämta matcher just nu.')
-    } else {
+    const payload = data && typeof data === 'object' ? data : null
+    const saved = Number(payload?.saved) || 0
+    if (payload?.success === true || saved > 0) {
       const extra =
-        Array.isArray(data?.warnings) && data.warnings.length > 0
-          ? ` ${data.warnings[0]}`
+        Array.isArray(payload?.warnings) && payload.warnings.length > 0
+          ? ` ${payload.warnings[0]}`
           : ''
       setSyncMessage(
-        data?.saved
-          ? `${data.saved} matcher uppdaterade.${extra}`
-          : `Inga matcher att spara just nu.${extra}`,
+        saved ? `${saved} matcher uppdaterade.${extra}` : `Inga matcher att spara just nu.${extra}`,
       )
-      await reload()
+    } else {
+      setSyncFailed(true)
+      setSyncMessage(
+        payload?.error?.message || invokeError?.message || 'Kunde inte hämta matcher just nu.',
+      )
     }
+    await reload()
+    syncingRef.current = false
     setSyncing(false)
-  }
+  }, [reload])
+
+  useEffect(() => {
+    if (loading || autoSyncStarted.current || items.length > 0) return
+    autoSyncStarted.current = true
+    handleSync()
+  }, [handleSync, items.length, loading])
 
   const handleAdd = async (match) => {
     if (addingId) return
@@ -146,7 +161,7 @@ export default function Rugby() {
         ))}
       </div>
 
-      {syncMessage && <p className="info">{syncMessage}</p>}
+      {syncMessage && <p className={syncFailed ? 'error' : 'info'}>{syncMessage}</p>}
       {addError && <p className="error">{addError}</p>}
       {error && <p className="error">{error}</p>}
       {loading && <Spinner />}

@@ -2,7 +2,7 @@
 -- Familjeappen – rugby (Top 14 / Pro D2)
 -- Kör efter phase2.sql. Får köras om.
 -- Matcher är gemensamma (inte per hushåll). Skrivs av edge-funktionen
--- sync-rugby. Läsning: inloggade i ett hushåll.
+-- sync-rugby. Läsning: inloggade användare.
 -- ============================================================
 
 create table if not exists public.rugby_matches (
@@ -26,10 +26,14 @@ create index if not exists ix_rugby_matches_kickoff
 
 alter table public.rugby_matches enable row level security;
 
+grant select on table public.rugby_matches to authenticated;
+
 drop policy if exists "rugby matches readable in household" on public.rugby_matches;
-create policy "rugby matches readable in household" on public.rugby_matches
+drop policy if exists "authenticated can read rugby matches" on public.rugby_matches;
+create policy "authenticated can read rugby matches" on public.rugby_matches
   for select
-  using (public.current_household_id() is not null);
+  to authenticated
+  using (true);
 
 -- Service role (edge function) går förbi RLS.
 
