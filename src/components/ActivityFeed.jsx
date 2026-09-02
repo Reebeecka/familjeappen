@@ -44,8 +44,18 @@ function activityLink(activity) {
   return null
 }
 
+function actorLabel(activity) {
+  if (activity.actor_name) return activity.actor_name
+  if (!activity.actor_id && isTodoEntity(activity.entity)) return 'Återkommande'
+  return 'Någon'
+}
+
+function isAutomaticTask(activity) {
+  return !activity.actor_id && isTodoEntity(activity.entity)
+}
+
 function inboxCopy(activity) {
-  const who = activity.actor_name || 'Någon'
+  const who = actorLabel(activity)
   if (activity.entity === 'inköp') {
     return { who, title: 'Inköpslistan uppdaterades', detail: activity.summary }
   }
@@ -60,6 +70,9 @@ function inboxCopy(activity) {
   }
   if (activity.entity === 'dokument') {
     return { who, title: `Nytt dokument: ${activity.summary}` }
+  }
+  if (isAutomaticTask(activity)) {
+    return { who: 'Återkommande', title: activity.summary || 'Ny uppgift' }
   }
   if (isTodoEntity(activity.entity)) {
     return { who, title: `Ny uppgift: ${activity.summary}` }

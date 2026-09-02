@@ -115,6 +115,8 @@ Deno.serve(async (req) => {
       .eq('id', actorId)
       .single()
     if (profile?.display_name) actorName = profile.display_name
+  } else if (payload.table === 'list_items' && payload.type === 'INSERT') {
+    actorName = 'Återkommande'
   }
 
   const message = buildMessage(payload, actorName)
