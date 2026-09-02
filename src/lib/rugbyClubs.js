@@ -83,6 +83,8 @@ export const RUGBY_CLUBS = [
   },
 ]
 
+export const RUGBY_CLUB_IDS = RUGBY_CLUBS.map((club) => club.id)
+
 const clubsById = new Map(RUGBY_CLUBS.map((club) => [club.id, club]))
 
 export function clubByApiId(teamId) {

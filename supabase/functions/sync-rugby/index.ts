@@ -118,6 +118,19 @@ const admin = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+  })
+}
+
 function currentSeason(now = new Date()) {
   const year = now.getFullYear()
   const month = now.getMonth() + 1
@@ -270,6 +283,7 @@ async function fetchClubCalendar(club: FollowedClub, season: number) {
       'User-Agent': USER_AGENT,
       Accept: 'text/html,application/xhtml+xml',
     },
+    signal: AbortSignal.timeout(12_000),
   })
   if (!response.ok) {
     throw new Error(`${club.slug} svarade ${response.status}`)
@@ -297,10 +311,14 @@ function toRow(match: ParsedMatch) {
 }
 
 Deno.serve(async (request) => {
+  if (request.method === 'OPTIONS') {
+    return new Response('ok', { headers: CORS_HEADERS })
+  }
+
   if (request.method !== 'POST') {
     return new Response('Method Not Allowed', {
       status: 405,
-      headers: { Allow: 'POST' },
+      headers: { ...CORS_HEADERS, Allow: 'POST, OPTIONS' },
     })
   }
 
@@ -338,7 +356,7 @@ Deno.serve(async (request) => {
       throw new Error(warnings[0] || 'Inga matcher kunde hämtas från LNR')
     }
 
-    return Response.json({
+    return jsonResponse({
       success: true,
       season,
       saved: rows.length,
@@ -346,7 +364,7 @@ Deno.serve(async (request) => {
     })
   } catch (error) {
     console.error('Kunde inte synka rugby', error)
-    return Response.json(
+    return jsonResponse(
       {
         success: false,
         error: {
@@ -354,7 +372,7 @@ Deno.serve(async (request) => {
           message: error instanceof Error ? error.message : 'Synken misslyckades',
         },
       },
-      { status: 500 },
+      500,
     )
   }
 })

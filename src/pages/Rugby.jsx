@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useCollection } from '../lib/useCollection'
 import { useRugbyMatches } from '../lib/useRugbyMatches'
 import {
+  RUGBY_CLUB_IDS,
   RUGBY_CLUBS,
   calendarPayloadForMatch,
   driveLabel,
@@ -83,6 +84,8 @@ export default function Rugby() {
   const [syncFailed, setSyncFailed] = useState(false)
   const [addingId, setAddingId] = useState(null)
   const [addError, setAddError] = useState('')
+  const [view, setView] = useState('upcoming')
+  const [selectedClubIds, setSelectedClubIds] = useState(() => new Set(RUGBY_CLUB_IDS))
   const syncingRef = useRef(false)
   const autoSyncStarted = useRef(false)
 
@@ -91,10 +94,26 @@ export default function Rugby() {
     start.setHours(0, 0, 0, 0)
     return start.getTime()
   }, [])
-  const upcoming = items.filter((match) => new Date(match.kickoff_at).getTime() >= todayStart)
-  const results = items
+  const visibleItems = items.filter((match) => selectedClubIds.has(Number(match.home_team_id)))
+  const upcoming = visibleItems.filter((match) => new Date(match.kickoff_at).getTime() >= todayStart)
+  const results = visibleItems
     .filter((match) => new Date(match.kickoff_at).getTime() < todayStart)
     .reverse()
+  const filterEmptyHint =
+    selectedClubIds.size === 0
+      ? 'Tryck på ett lag ovanför för att visa dess hemmamatcher.'
+      : selectedClubIds.size < RUGBY_CLUBS.length
+        ? 'Inga matcher för de lag du valt just nu.'
+        : null
+
+  const toggleClub = (clubId) => {
+    setSelectedClubIds((current) => {
+      const next = new Set(current)
+      if (next.has(clubId)) next.delete(clubId)
+      else next.add(clubId)
+      return next
+    })
+  }
 
   const handleSync = useCallback(async () => {
     if (syncingRef.current || !supabase) return
@@ -118,13 +137,15 @@ export default function Rugby() {
     } else {
       setSyncFailed(true)
       setSyncMessage(
-        payload?.error?.message || invokeError?.message || 'Kunde inte hämta matcher just nu.',
+        items.length > 0
+          ? 'Kunde inte uppdatera just nu. Matcher du redan ser är kvar.'
+          : 'Kunde inte hämta matcher just nu. Försök igen.',
       )
     }
     await reload()
     syncingRef.current = false
     setSyncing(false)
-  }, [reload])
+  }, [items.length, reload])
 
   useEffect(() => {
     if (loading || autoSyncStarted.current || items.length > 0) return
@@ -150,62 +171,94 @@ export default function Rugby() {
           {syncing ? 'Hämtar…' : 'Uppdatera'}
         </button>
       </div>
-      <p className="muted small">Matcher för klubbar nära Pamiers. Carcassonne är inte med.</p>
 
-      <div className="rugby-clubs">
-        {RUGBY_CLUBS.map((club) => (
-          <span key={club.id} className="rugby-chip">
-            {club.short}
-            <span className="rugby-chip-league">{club.league}</span>
-          </span>
-        ))}
+      <div className="rugby-clubs" role="group" aria-label="Filtrera lag">
+        {RUGBY_CLUBS.map((club) => {
+          const selected = selectedClubIds.has(club.id)
+          return (
+            <button
+              key={club.id}
+              type="button"
+              className={selected ? 'rugby-chip selected' : 'rugby-chip'}
+              aria-pressed={selected}
+              onClick={() => toggleClub(club.id)}
+            >
+              {club.short}
+              <span className="rugby-chip-league">{club.league}</span>
+            </button>
+          )
+        })}
       </div>
 
       {syncMessage && <p className={syncFailed ? 'error' : 'info'}>{syncMessage}</p>}
       {addError && <p className="error">{addError}</p>}
       {error && <p className="error">{error}</p>}
+      <div className="rugby-view-toggle" aria-label="Rugbyvy">
+        <button
+          type="button"
+          className={`btn ${view === 'upcoming' ? 'primary' : 'ghost'}`}
+          onClick={() => setView('upcoming')}
+          aria-pressed={view === 'upcoming'}
+        >
+          Kommande
+        </button>
+        <button
+          type="button"
+          className={`btn ${view === 'results' ? 'primary' : 'ghost'}`}
+          onClick={() => setView('results')}
+          aria-pressed={view === 'results'}
+        >
+          Resultat
+        </button>
+      </div>
+
       {loading && <Spinner />}
 
-      {!loading && upcoming.length === 0 && results.length === 0 && (
+      {!loading && view === 'upcoming' && upcoming.length === 0 && (
         <EmptyState
           icon={Trophy}
-          title="Inga matcher ännu"
-          description="Tryck på Uppdatera för att hämta matcher från Top 14 och Pro D2."
+          title="Inga kommande matcher"
+          description={
+            filterEmptyHint ??
+            'Tryck på Uppdatera för att hämta matcher från Top 14 och Pro D2.'
+          }
         />
       )}
 
-      {upcoming.length > 0 && (
-        <section className="rugby-section">
-          <h2 className="rugby-heading">Kommande</h2>
-          <div className="list">
-            {upcoming.map((match) => (
-              <MatchCard
-                key={match.api_id}
-                match={match}
-                onCalendar={isMatchOnCalendar(calendarEvents, match)}
-                adding={addingId === match.api_id}
-                onAdd={handleAdd}
-              />
-            ))}
-          </div>
-        </section>
+      {!loading && view === 'results' && results.length === 0 && (
+        <EmptyState
+          icon={Trophy}
+          title="Inga resultat ännu"
+          description={filterEmptyHint ?? 'Här visas matcher som redan har spelats.'}
+        />
       )}
 
-      {results.length > 0 && (
-        <section className="rugby-section">
-          <h2 className="rugby-heading">Resultat</h2>
-          <div className="list">
-            {results.map((match) => (
-              <MatchCard
-                key={match.api_id}
-                match={match}
-                onCalendar={isMatchOnCalendar(calendarEvents, match)}
-                adding={false}
-                onAdd={handleAdd}
-              />
-            ))}
-          </div>
-        </section>
+      {!loading && view === 'upcoming' && upcoming.length > 0 && (
+        <div className="list">
+          {upcoming.map((match) => (
+            <MatchCard
+              key={match.api_id}
+              match={match}
+              onCalendar={isMatchOnCalendar(calendarEvents, match)}
+              adding={addingId === match.api_id}
+              onAdd={handleAdd}
+            />
+          ))}
+        </div>
+      )}
+
+      {!loading && view === 'results' && results.length > 0 && (
+        <div className="list">
+          {results.map((match) => (
+            <MatchCard
+              key={match.api_id}
+              match={match}
+              onCalendar={isMatchOnCalendar(calendarEvents, match)}
+              adding={false}
+              onAdd={handleAdd}
+            />
+          ))}
+        </div>
       )}
     </div>
   )

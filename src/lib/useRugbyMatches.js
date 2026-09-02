@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { RUGBY_CLUB_IDS } from './rugbyClubs'
 import { supabase } from './supabase'
 import { useAuth } from './AuthContext'
 
@@ -15,6 +16,7 @@ export function useRugbyMatches(fromIso, toIso) {
     let query = supabase
       .from('rugby_matches')
       .select('*')
+      .in('home_team_id', RUGBY_CLUB_IDS)
       .order('kickoff_at', { ascending: true })
       .limit(300)
 
